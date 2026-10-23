@@ -9,6 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="delivery.css" />
+  <script src="header.js"></script>
 </head>
 <body class="theme-delivery-portal">
   <div class="ambient-glow glow-delivery-1"></div>
@@ -28,11 +29,14 @@
       </div>
 
       <div class="header-right">
+        <button class="control-btn portal-language-toggle" data-language-toggle aria-label="Switch language to Kannada" title="Switch language to Kannada">
+          <span class="btn-icon">🌐</span><span data-language-label>ಕನ್ನಡ</span>
+        </button>
         <div class="user-chip delivery-user-chip">
           <span class="user-avatar" id="riderAvatar">🚴</span>
           <div class="user-details">
             <span class="user-name" id="riderName">Rahul Kumar</span>
-            <span class="user-role-badge text-cyan">Active On-Duty Courier</span>
+            <span class="user-role-badge text-cyan">Verified Delivery Partner</span>
           </div>
         </div>
 
@@ -58,8 +62,8 @@
       <div class="stat-card">
         <div class="stat-icon">🗺️</div>
         <div class="stat-content">
-          <span class="stat-number text-cyan">—</span>
-          <span class="stat-label">Distance tracked</span>
+          <span class="stat-number text-cyan" id="riderActiveCount">0</span>
+          <span class="stat-label">Active missions</span>
         </div>
       </div>
 
@@ -74,8 +78,8 @@
       <div class="stat-card">
         <div class="stat-icon">⭐</div>
         <div class="stat-content">
-          <span class="stat-number text-amber">—</span>
-          <span class="stat-label">Community rating</span>
+          <span class="stat-number text-amber" id="riderAvailability">—</span>
+          <span class="stat-label">Availability</span>
         </div>
       </div>
     </section>
@@ -87,8 +91,8 @@
         <div class="card-title-bar">
           <div class="card-icon-badge">🛵</div>
           <div>
-            <h3>Available Rescue Requests in Your City</h3>
-            <p class="card-caption">Select and accept nearby pickup missions</p>
+            <h3>Dispatch Updates</h3>
+            <p class="card-caption">Verified available partners are assigned automatically when an NGO reserves food</p>
           </div>
         </div>
 
@@ -135,6 +139,9 @@
   </div>
 
   <script src="api.js"></script>
+  <script src="i18n.js"></script>
+  <script src="footer.js"></script>
+  <script src="interactions.js"></script>
   <script src="delivery.js"></script>
 </body>
 </html>

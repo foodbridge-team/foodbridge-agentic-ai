@@ -9,6 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="donor.css" />
+  <script src="header.js"></script>
 </head>
 <body class="theme-donor-portal">
   <div class="ambient-glow glow-1"></div>
@@ -29,6 +30,9 @@
 
       <!-- User Profile & Quick Stats -->
       <div class="header-right">
+        <button class="control-btn portal-language-toggle" data-language-toggle aria-label="Switch language to Kannada" title="Switch language to Kannada">
+          <span class="btn-icon">🌐</span><span data-language-label>ಕನ್ನಡ</span>
+        </button>
         <div class="user-chip">
           <span class="user-avatar" id="donorAvatar">👨‍🍳</span>
           <div class="user-details">
@@ -43,7 +47,14 @@
       </div>
     </header>
 
-    <section id="accountNotifications" class="notifications-panel" aria-live="polite"></section>
+    <section class="donor-welcome" aria-labelledby="donorWelcomeTitle">
+      <div>
+        <span class="donor-welcome-eyebrow"><span class="donor-live-dot"></span> DONOR DASHBOARD</span>
+        <h1 id="donorWelcomeTitle">Good food goes further.</h1>
+        <p>Share your surplus with local communities. List a donation, then follow its pickup right here.</p>
+      </div>
+      <a class="donor-welcome-link" href="index.html">View rescue network <span aria-hidden="true">→</span></a>
+    </section>
 
     <!-- Quick Stats Ticker -->
     <section class="donor-stats-banner">
@@ -66,16 +77,8 @@
       <div class="stat-card">
         <div class="stat-icon">📜</div>
         <div class="stat-content">
-          <span class="stat-number">—</span>
-          <span class="stat-label">Confirmed Handover Rate</span>
-        </div>
-      </div>
-
-      <div class="stat-card">
-        <div class="stat-icon">🛡️</div>
-        <div class="stat-content">
-          <span class="stat-number text-emerald">SHA-256</span>
-          <span class="stat-label">Audit Chain Integrity</span>
+          <span class="stat-number">Live</span>
+          <span class="stat-label">Pickup tracking</span>
         </div>
       </div>
     </section>
@@ -109,17 +112,6 @@
               </select>
             </div>
 
-            <div class="form-row">
-              <div class="form-field">
-                <label for="postLat">Pickup Latitude</label>
-                <input type="number" id="postLat" class="form-input" min="-90" max="90" step="any" placeholder="12.9141" required />
-              </div>
-              <div class="form-field">
-                <label for="postLng">Pickup Longitude</label>
-                <input type="number" id="postLng" class="form-input" min="-180" max="180" step="any" placeholder="74.856" required />
-              </div>
-            </div>
-
             <div class="form-field">
               <label for="postQuantity">Quantity (Portions / Meals)</label>
               <div class="qty-input-wrap">
@@ -131,6 +123,15 @@
                 </div>
               </div>
             </div>
+          </div>
+
+          <div class="form-field">
+            <label for="postPickupAddress">Pickup Address</label>
+            <textarea id="postPickupAddress" class="form-input" rows="2" maxlength="300" placeholder="Building, street, area, city, postal code" autocomplete="street-address" required></textarea>
+            <input type="hidden" id="postLat" />
+            <input type="hidden" id="postLng" />
+            <button type="button" id="btnConfirmPickupLocation" class="btn btn-outline">Use this device's location for matching</button>
+            <span id="pickupLocationStatus" class="form-help" aria-live="polite">Enter the pickup address, then confirm the pickup location from the device at that location.</span>
           </div>
 
           <div class="form-field">
@@ -203,6 +204,9 @@
   </div>
 
   <script src="api.js"></script>
+  <script src="i18n.js"></script>
+  <script src="footer.js"></script>
+  <script src="interactions.js"></script>
   <script src="donor.js"></script>
 </body>
 </html>

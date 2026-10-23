@@ -25,6 +25,110 @@ document.addEventListener("DOMContentLoaded", async () => {
   hoursSlider?.addEventListener("input", (e) => {
     hoursDisplay.textContent = `${parseFloat(e.target.value).toFixed(1)} hrs`;
   });
+  const pickupAddress = document.getElementById("postPickupAddress");
+  const pickupLat = document.getElementById("postLat");
+  const pickupLng = document.getElementById("postLng");
+  const pickupLocationStatus = document.getElementById("pickupLocationStatus");
+  const pickupLocationButton = document.getElementById("btnConfirmPickupLocation");
+  let locationWatchId = null;
+  let confirmedAddress = "";
+  const locationDefaultStatus = "Enter the pickup address, then confirm the pickup location from the device at that location.";
+
+  const stopLocationTracking = (message) => {
+    if (locationWatchId !== null) {
+      navigator.geolocation.clearWatch(locationWatchId);
+      locationWatchId = null;
+    }
+    if (pickupLocationButton) {
+      pickupLocationButton.disabled = false;
+      pickupLocationButton.textContent = "Use this device's location for matching";
+    }
+    if (message && pickupLocationStatus) pickupLocationStatus.textContent = message;
+  };
+
+  pickupAddress?.addEventListener("input", () => {
+    stopLocationTracking("Confirm the pickup location again after changing the address.");
+    pickupLat.value = "";
+    pickupLng.value = "";
+    confirmedAddress = "";
+  });
+  pickupLocationButton?.addEventListener("click", async () => {
+    if (locationWatchId !== null) {
+      stopLocationTracking("Location tracking stopped. Your last confirmed pickup point is saved.");
+      return;
+    }
+    if (!pickupAddress?.value.trim()) {
+      showToast("Enter the pickup address before confirming its location.", "warning");
+      pickupAddress?.focus();
+      return;
+    }
+    if (!window.isSecureContext) {
+      const message = "Use a secure connection (HTTPS or localhost) to access device location.";
+      if (pickupLocationStatus) pickupLocationStatus.textContent = message;
+      showToast(message, "error");
+      return;
+    }
+    if (!navigator.geolocation?.watchPosition) {
+      showToast("This browser does not provide device location. Pickup matching cannot be confirmed.", "error");
+      if (pickupLocationStatus) pickupLocationStatus.textContent = "Location tracking is unavailable on this browser.";
+      return;
+    }
+
+    if (navigator.permissions?.query) {
+      try {
+        const permission = await navigator.permissions.query({ name: "geolocation" });
+        if (permission.state === "denied") {
+          const message = "Location permission is blocked. Allow location access in your browser settings.";
+          if (pickupLocationStatus) pickupLocationStatus.textContent = message;
+          showToast(message, "error");
+          return;
+        }
+      } catch {
+        // Some browsers do not support querying geolocation permission; watchPosition will still request it.
+      }
+    }
+
+    confirmedAddress = pickupAddress.value.trim();
+    pickupLocationButton.textContent = "Confirming location...";
+    if (pickupLocationStatus) pickupLocationStatus.textContent = "Confirming location...";
+    locationWatchId = navigator.geolocation.watchPosition(
+      (position) => {
+        if (pickupAddress.value.trim() !== confirmedAddress) {
+          pickupLat.value = "";
+          pickupLng.value = "";
+          confirmedAddress = "";
+          stopLocationTracking("The address changed while location was being checked. Confirm the new pickup point again.");
+          return;
+        }
+        const { latitude, longitude, accuracy } = position.coords;
+        if (!Number.isFinite(latitude) || !Number.isFinite(longitude) ||
+            latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
+          stopLocationTracking("Unable to confirm the pickup point. Try again at the pickup address.");
+          return;
+        }
+        pickupLat.value = String(latitude);
+        pickupLng.value = String(longitude);
+        pickupLocationButton.textContent = "Stop location tracking";
+        if (pickupLocationStatus) {
+          pickupLocationStatus.textContent = `Device location confirmed (±${Math.round(accuracy)} m). Tracking while this form is open.`;
+        }
+      },
+      (error) => {
+        const message = error.code === error.PERMISSION_DENIED
+          ? "Location access is blocked. Enable location permission in your browser settings and try again."
+          : error.code === error.POSITION_UNAVAILABLE
+            ? "Location unavailable. Check your device's location services and try again."
+            : "Location request timed out. Move to an area with a clearer GPS signal and try again.";
+        stopLocationTracking(message);
+        showToast(message, "error");
+      }, {
+        enableHighAccuracy: true,
+        timeout: 20000,
+        maximumAge: 0,
+      }
+    );
+  });
+  window.addEventListener("pagehide", () => stopLocationTracking());
 
   // Load Initial Data
   fetchDonorDonations();
@@ -48,6 +152,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     const quantity = parseInt(document.getElementById("postQuantity").value, 10);
     const hours = parseFloat(hoursSlider.value);
     const storageOk = document.getElementById("postStorage").checked;
+    const address = pickupAddress.value.trim();
+    const lat = Number(pickupLat.value);
+    const lng = Number(pickupLng.value);
+    if (!address || !pickupLat.value || !pickupLng.value || address !== confirmedAddress) {
+      showToast("Enter the pickup address and confirm its location before publishing.", "error");
+      return;
+    }
 
     const allergens = [];
     if (document.getElementById("algDairy").checked) allergens.push("dairy");
@@ -70,10 +181,8 @@ document.addEventListener("DOMContentLoaded", async () => {
           hours,
           storageOk,
           allergens,
-          location: {
-            lat: Number(document.getElementById("postLat").value),
-            lng: Number(document.getElementById("postLng").value),
-          },
+          pickupAddress: address,
+          location: { lat, lng },
         }),
       });
 
@@ -81,8 +190,13 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (!res.ok || !data.success) throw new Error(data.error || "Unable to publish donation.");
 
       showToast("🎉 Surplus Food Listed! Matched on Ledger.", "success");
+      stopLocationTracking();
+      confirmedAddress = "";
       form.reset();
       hoursDisplay.textContent = "4.0 hrs";
+      if (pickupLocationStatus) pickupLocationStatus.textContent = locationDefaultStatus;
+      const locationButton = document.getElementById("btnConfirmPickupLocation");
+      if (locationButton) locationButton.textContent = "Use this device's location for matching";
 
       await fetchDonorDonations();
       await fetchDonorStats();
@@ -104,6 +218,7 @@ async function fetchDonorStats() {
     const res = await fetch("/api/donations");
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Unable to load donor activity.");
+    if (!res.ok) throw new Error(data.error || "Unable to load donor activity.");
     const deliveredMeals = (data.donations || [])
       .filter((donation) => donation.status === "DELIVERED")
       .reduce((total, donation) => total + (donation.deliveredQuantity || donation.quantity), 0);
@@ -121,6 +236,7 @@ async function fetchDonorDonations() {
   try {
     const res = await fetch("/api/donations");
     const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Unable to load donor donations.");
     const donations = data.donations || [];
 
     if (donations.length === 0) {
@@ -148,12 +264,13 @@ async function fetchDonorDonations() {
               ${d.assignedNgoId ? `<span class="stat-pill text-cyan">🏢 Reserved by ${escapeHtml(d.assignedNgoId)}</span>` : ""}
               ${d.collectorId ? `<span class="stat-pill text-emerald">🚴 ${d.handoverType === "NGO_SELF_PICKUP" ? "NGO Self-Pickup" : `Partner: ${escapeHtml(d.collectorId)}`}</span>` : ""}
             </div>
+            ${d.pickupAddress ? `<div class="donation-location-row"><span class="location-icon">📍</span><span class="location-text">${escapeHtml(d.pickupAddress)}</span></div>` : ""}
 
             <div class="donation-actions-row">
               ${
                 canIssueOtp
-                  ? `<button class="btn-generate-otp" onclick="donorGenerateOtp('${d.id}')">
-                      🔑 Generate Pickup OTP
+                  ? `<button type="button" class="btn-generate-otp" onclick="donorGenerateOtp('${d.id}')">
+                      🔑 Get OTP
                     </button>`
                   : ""
               }
@@ -191,12 +308,13 @@ async function donorGenerateOtp(donationId) {
     });
 
     const data = await res.json();
-    if (!data.success) throw new Error(data.error);
+    if (!res.ok || !data.success) throw new Error(data.error || "Unable to issue pickup code.");
 
     openDonorModal(`
       <div class="otp-display-box">
+        <span class="otp-code-label">Share this pickup code with the arriving rider</span>
         <span class="otp-number">${data.pickupCode}</span>
-        <p class="otp-expiry-note">Present this secure 6-digit code to the arriving volunteer collector.</p>
+        <p class="otp-expiry-note">This code is valid for 10 minutes and can be used once.</p>
         <div style="display:flex;gap:0.5rem;flex-wrap:wrap;justify-content:center;margin-top:0.5rem">
           <span class="stat-pill">🔒 HMAC-SHA256 Salted</span>
           <span class="stat-pill">⏱️ 10-Min Expiry</span>
@@ -229,7 +347,8 @@ function showToast(message, type = "info") {
 
   const toast = document.createElement("div");
   toast.className = `toast toast-${type}`;
-  toast.textContent = `${type === "success" ? "✅" : "⚠️"} ${message}`;
+  const translatedMessage = window.foodBridgeTranslate?.(message) || message;
+  toast.textContent = `${type === "success" ? "✅" : "⚠️"} ${translatedMessage}`;
   container.appendChild(toast);
 
   setTimeout(() => {

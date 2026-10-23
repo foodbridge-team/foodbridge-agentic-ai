@@ -1,7 +1,7 @@
 /**
  * FoodBridge AI — Full Platform Client Application
  * Modular Vanilla JavaScript driving multi-role portals, Leaflet geo-map,
- * cryptographic state verification, and English/Kannada i18n.
+ * and English/Kannada i18n.
  */
 
 // Global State
@@ -10,98 +10,9 @@ const state = {
   currentLang: "en",
   donations: [],
   stats: {},
-  ledger: { events: [], verification: { ok: true } },
   map: null,
   mapMarkers: [],
   activeVolunteerMission: null,
-};
-
-// Kannada (ಕನ್ನಡ) and English Translations Dictionary
-const i18n = {
-  en: {
-    tagline: "Surplus Food Redistribution Network",
-    mealsRescued: "Meals Rescued",
-    co2Saved: "CO₂ Avoided",
-    activeTrips: "In Transit",
-    ledgerStatus: "Tamper-Proof Ledger",
-    resetDemo: "Reset",
-    roleDonor: "Donor Portal",
-    roleDonorSub: "Post Food & Manage Pickup",
-    roleNgo: "NGO Portal",
-    roleNgoSub: "Claim Donations & Delivery OTP",
-    roleVolunteer: "Volunteer Dispatch",
-    roleVolunteerSub: "Pickup, Deliver & Evidence",
-    roleAudit: "AI & Cryptographic Ledger",
-    roleAuditSub: "SHA-256 Hash Chain Explorer",
-    liveMapTitle: "Live City Rescue Network & Transit Map",
-    legendDonors: "Donors",
-    legendNgos: "NGOs",
-    legendVolunteers: "Volunteers in Transit",
-    postDonationTitle: "List Surplus Food",
-    postDonationDesc: "Instant AI-matching with eligible verified receivers",
-    lblFoodTitle: "Food Title / Description",
-    lblCategory: "Food Category",
-    lblQuantity: "Quantity (Portions / Meals)",
-    lblDeadline: "Safe Expiration Window (Hours)",
-    lblAllergens: "Allergen Declarations",
-    lblStorageSafe: "Stored in hygienic, insulated food-grade containers",
-    myDonationsTitle: "My Food Donations",
-    myDonationsDesc: "Track volunteer dispatch & generate pickup verification codes",
-    ngoAvailableTitle: "Available Surplus Food Nearby",
-    ngoAvailableDesc: "Deterministic feasibility filter & AI proximity ranking",
-    ngoClaimedTitle: "Claimed Donations & Receiving Handover",
-    ngoClaimedDesc: "Generate secure delivery OTP and verify incoming meals",
-    volMissionsTitle: "Rescue Deliveries in Your Area",
-    volMissionsDesc: "Accept delivery routes to transport food from donors to NGOs",
-    volActiveTitle: "Active Mission Handover Console",
-    volActiveDesc: "Two-Stage OTP Verification with Photo Evidence",
-    auditLedgerTitle: "Immutable SHA-256 Audit Ledger",
-    auditLedgerDesc: "Cryptographically linked hash chain securing every donation event",
-    auditAiTitle: "Deterministic Rules & Security Core",
-    auditAiDesc: "Architecture rules running on zero-dependency Node.js core",
-  },
-  kn: {
-    tagline: "ಹೆಚ್ಚುವರಿ ಆಹಾರ ಮರುಹಂಚಿಕೆ ನೆಟ್‌ವರ್ಕ್",
-    mealsRescued: "ಉಳಿಸಿದ ಊಟಗಳು",
-    co2Saved: "ತಪ್ಪಿಸಿದ CO₂",
-    activeTrips: "ಸಾರಿಗೆಯಲ್ಲಿದೆ",
-    ledgerStatus: "ಸುರಕ್ಷಿತ ಲೆಡ್ಜರ್",
-    resetDemo: "ಮರುಹೊಂದಿಸಿ",
-    roleDonor: "ದಾನಿಗಳ ಪೋರ್ಟಲ್",
-    roleDonorSub: "ಆಹಾರ ಪೋಸ್ಟ್ ಮಾಡಿ ಮತ್ತು ಪಿಕಪ್ ನಿರ್ವಹಿಸಿ",
-    roleNgo: "ಎನ್‌ಜಿಒ ಪೋರ್ಟಲ್",
-    roleNgoSub: "ಆಹಾರ ಪಡೆದುಕೊಳ್ಳಿ & ವಿತರಣಾ OTP",
-    roleVolunteer: "ಸ್ವಯಂಸೇವಕರು",
-    roleVolunteerSub: "ಪಿಕಪ್, ವಿತರಣೆ ಮತ್ತು ಪುರಾವೆ",
-    roleAudit: "AI & ಕ್ರಿಪ್ಟೋಗ್ರಾಫಿಕ್ ಲೆಡ್ಜರ್",
-    roleAuditSub: "SHA-256 ಹ್ಯಾಶ್ ಚೈನ್ ಪರಿಶೀಲಕ",
-    liveMapTitle: "ನಗರದ ನೈಜ ಸಮಯದ ಆಹಾರ ರಕ್ಷಣಾ ನೆಟ್‌ವರ್ಕ್ ನಕ್ಷೆ",
-    legendDonors: "ದಾನಿಗಳು",
-    legendNgos: "ಎನ್‌ಜಿಒಗಳು",
-    legendVolunteers: "ಸಂಚಾರದಲ್ಲಿರುವ ಸ್ವಯಂಸೇವಕರು",
-    postDonationTitle: "ಹೆಚ್ಚುವರಿ ಆಹಾರವನ್ನು ಪಟ್ಟಿ ಮಾಡಿ",
-    postDonationDesc: "ಪರಿಶೀಲಿಸಿದ ಸ್ವೀಕರಿಸುವವರೊಂದಿಗೆ ತಕ್ಷಣದ AI ಹೊಂದಾಣಿಕೆ",
-    lblFoodTitle: "ಆಹಾರದ ಶೀರ್ಷಿಕೆ / ವಿವರಣೆ",
-    lblCategory: "ಆಹಾರ ವರ್ಗ",
-    lblQuantity: "ಪ್ರಮಾಣ (ಊಟಗಳ ಸಂಖ್ಯೆ)",
-    lblDeadline: "ಸುರಕ್ಷಿತ ಬಳಕೆಯ ಅವಧಿ (ಗಂಟೆಗಳು)",
-    lblAllergens: "ಅಲರ್ಜಿನ್ ವಿವರ",
-    lblStorageSafe: "ಸ್ವಚ್ಛ ಮತ್ತು ಸುರಕ್ಷಿತ ಪಾತ್ರೆಗಳಲ್ಲಿ ಇಡಲಾಗಿದೆ",
-    myDonationsTitle: "ನನ್ನ ಆಹಾರ ಕೊಡುಗೆಗಳು",
-    myDonationsDesc: "ವಿತರಣಾ ಪ್ರಕ್ರಿಯೆ ಮತ್ತು ಪಿಕಪ್ OTP ಕೋಡ್ ಪರಿಶೀಲಿಸಿ",
-    ngoAvailableTitle: "ಹತ್ತಿರದ ಲಭ್ಯವಿರುವ ಹೆಚ್ಚುವರಿ ಆಹಾರ",
-    ngoAvailableDesc: "AI ಹೊಂದಾಣಿಕೆ ಮತ್ತು ಅಂತರ ಶ್ರೇಯಾಂಕ",
-    ngoClaimedTitle: "ಪಡೆದ ಕೊಡುಗೆಗಳು ಮತ್ತು ಹಸ್ತಾಂತರ",
-    ngoClaimedDesc: "ಸುರಕ್ಷಿತ ವಿತರಣಾ OTP ರಚಿಸಿ ಮತ್ತು ಊಟ ಪರಿಶೀಲಿಸಿ",
-    volMissionsTitle: "ನಿಮ್ಮ ಪ್ರದೇಶದಲ್ಲಿ ವಿತರಣಾ ಕಾರ್ಯಗಳು",
-    volMissionsDesc: "ದಾನಿಗಳಿಂದ ಎನ್‌ಜಿಒಗಳಿಗೆ ಆಹಾರ ಸಾಗಿಸಲು ಸ್ವೀಕರಿಸಿ",
-    volActiveTitle: "ಸಕ್ರಿಯ ವಿತರಣಾ ಕನ್ಸೋಲ್",
-    volActiveDesc: "ಎರಡು ಹಂತದ OTP ಮತ್ತು ಫೋಟೋ ಪುರಾವೆ ಪರಿಶೀಲನೆ",
-    auditLedgerTitle: "ಬದಲಾಯಿಸಲಾಗದ SHA-256 ಲೆಡ್ಜರ್",
-    auditLedgerDesc: "ಪ್ರತಿ ಹಂತವನ್ನು ಸುರಕ್ಷಿತಗೊಳಿಸುವ ಹ್ಯಾಶ್ ಸರಪಳಿ",
-    auditAiTitle: "ಭದ್ರತಾ ಕೋರ್ ಮತ್ತು ನಿಯಮಗಳು",
-    auditAiDesc: "Node.js ನಲ್ಲಿ ಚಲಿಸುವ ಪರಿಶೀಲನಾ ವ್ಯವಸ್ಥೆ",
-  },
 };
 
 // Initialize App
@@ -113,90 +24,19 @@ document.addEventListener("DOMContentLoaded", () => {
   bindModalEvents();
   fetchInitialData();
 
-  // Periodic polling for stats & ledger updates
+  // Periodic polling for platform stats
   setInterval(refreshPlatformData, 6000);
 });
 
 /* ==========================================================================
-   1. MAP INITIALIZATION (Leaflet OpenStreetMap)
+   1. MAP INITIALIZATION (Map removed per request)
    ========================================================================== */
 function initMap() {
-  const mapElement = document.getElementById("rescueMap");
-  if (!mapElement || typeof L === "undefined") return;
-
-  // Mangaluru center coordinates
-  state.map = L.map("rescueMap", {
-    zoomControl: true,
-    scrollWheelZoom: false,
-  }).setView([12.921, 74.862], 13);
-
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    maxZoom: 18,
-    attribution: "© OpenStreetMap contributors",
-  }).addTo(state.map);
+  // Leaflet map replaced with interactive animated workflow protocol
 }
 
 function updateMapMarkers() {
-  if (!state.map || typeof L === "undefined") return;
-
-  // Clear existing markers
-  state.mapMarkers.forEach((m) => state.map.removeLayer(m));
-  state.mapMarkers = [];
-
-  // Default NGOs on Map
-  const ngos = [
-    { name: "Seva Trust Care", lat: 12.921, lng: 74.862, desc: "Capacity: 80 meals" },
-    { name: "Karuna Meal Mission", lat: 12.928, lng: 74.872, desc: "Capacity: 120 meals" },
-    { name: "Child Nutrition Center", lat: 12.936, lng: 74.869, desc: "Capacity: 25 meals" },
-  ];
-
-  ngos.forEach((ngo) => {
-    const marker = L.circleMarker([ngo.lat, ngo.lng], {
-      radius: 9,
-      fillColor: "#8b5cf6",
-      color: "#c4b5fd",
-      weight: 2,
-      opacity: 1,
-      fillOpacity: 0.9,
-    }).addTo(state.map);
-
-    marker.bindPopup(`<strong>🏢 ${ngo.name}</strong><br>${ngo.desc}`);
-    state.mapMarkers.push(marker);
-  });
-
-  // Render Donations
-  state.donations.forEach((d) => {
-    if (!d.location) return;
-
-    let color = "#10b981"; // Listed
-    let emoji = "🍲";
-
-    if (d.status === "PICKED_UP" || d.status === "ASSIGNED") {
-      color = "#06b6d4";
-      emoji = "🚴";
-    } else if (d.status === "DELIVERED") {
-      color = "#34d399";
-      emoji = "✅";
-    }
-
-    const marker = L.circleMarker([d.location.lat, d.location.lng], {
-      radius: 10,
-      fillColor: color,
-      color: "#ffffff",
-      weight: 2,
-      opacity: 1,
-      fillOpacity: 0.95,
-    }).addTo(state.map);
-
-    marker.bindPopup(`
-      <strong>${emoji} ${d.title}</strong><br>
-      Donor: ${d.donorName}<br>
-      Portions: <strong>${d.quantity} meals</strong><br>
-      Status: <span style="color:${color};font-weight:700">${d.status}</span>
-    `);
-
-    state.mapMarkers.push(marker);
-  });
+  // Leaflet map replaced with interactive animated workflow protocol
 }
 
 /* ==========================================================================
@@ -238,7 +78,7 @@ function bindRoleTabs() {
    3. DATA FETCHING & RENDERING
    ========================================================================== */
 async function fetchInitialData() {
-  await Promise.all([refreshPlatformData(), fetchDonations(), fetchLedger()]);
+  await Promise.all([refreshPlatformData(), fetchDonations()]);
   updateMapMarkers();
 }
 
@@ -247,13 +87,9 @@ async function refreshPlatformData() {
     const res = await fetch("/api/stats");
     const data = await res.json();
     state.stats = data;
-    const demoNotice = document.getElementById("demoDataNotice");
-    if (demoNotice) demoNotice.hidden = !data.demoMode;
-
     document.getElementById("metricMealsRescued").textContent = data.mealsRescued;
     document.getElementById("metricCo2Saved").textContent = `${data.co2SavedKg} kg`;
     document.getElementById("metricActiveDeliveries").textContent = data.activeDeliveries;
-    document.getElementById("metricLedgerBlocks").textContent = `${data.ledgerBlocks} Blocks`;
   } catch (err) {
     console.warn("Stats fetch failed:", err);
   }
@@ -271,17 +107,6 @@ async function fetchDonations() {
     updateMapMarkers();
   } catch (err) {
     console.warn("Donations fetch failed:", err);
-  }
-}
-
-async function fetchLedger() {
-  try {
-    const res = await fetch("/api/ledger");
-    const data = await res.json();
-    state.ledger = data;
-    renderAuditLedger();
-  } catch (err) {
-    console.warn("Ledger fetch failed:", err);
   }
 }
 
@@ -553,50 +378,6 @@ function renderVolunteerPortal() {
   }
 }
 
-// --- AUDIT LEDGER ---
-function renderAuditLedger() {
-  const container = document.getElementById("auditLedgerStream");
-  const badge = document.getElementById("auditBadgeChain");
-  if (!container) return;
-
-  const events = state.ledger.events || [];
-  const ok = state.ledger.verification?.ok ?? true;
-
-  if (badge) {
-    badge.className = ok ? "badge badge-success" : "badge badge-warning";
-    badge.innerHTML = `<span class="badge-dot"></span> Chain Integrity: ${ok ? "VERIFIED (100% OK)" : "COMPROMISED!"}`;
-  }
-
-  if (events.length === 0) {
-    container.innerHTML = `<div class="empty-state"><span class="empty-icon">⛓️</span><p>No blocks recorded yet.</p></div>`;
-    return;
-  }
-
-  container.innerHTML = events
-    .slice()
-    .reverse()
-    .map(
-      (ev) => `
-      <div class="ledger-block">
-        <div class="ledger-block-header">
-          <span>Block #${ev.id} • ${ev.type}</span>
-          <span class="block-ts">${new Date(ev.ts).toLocaleTimeString()}</span>
-        </div>
-        <div class="hash-row">
-          <strong>Prev:</strong> <span class="hash-val">${ev.prevHash.slice(0, 24)}...</span>
-        </div>
-        <div class="hash-row">
-          <strong>Hash:</strong> <span class="hash-val">${ev.hash.slice(0, 24)}...</span>
-        </div>
-        <div class="payload-box">
-          ${escapeHtml(JSON.stringify(ev.payload))}
-        </div>
-      </div>
-    `
-    )
-    .join("");
-}
-
 /* ==========================================================================
    5. ACTIONS & MODALS
    ========================================================================== */
@@ -639,16 +420,15 @@ async function handleNgoClaim(donationId) {
       body: JSON.stringify({
         donationId,
         ngoId: JSON.parse(localStorage.getItem("foodbridge_user") || "{}").ngoProfileId,
-        handoverType: "VOLUNTEER",
+        handoverType: "NGO_SELF_PICKUP",
       }),
     });
 
     const data = await res.json();
     if (!res.ok || !data.success) throw new Error(data.error || data.message);
 
-    showToast("🎉 Donation reserved for NGO! Dispatching volunteer...", "success");
+    showToast("Reservation Confirmed! Self-pickup arranged.", "success");
     await fetchDonations();
-    await fetchLedger();
   } catch (err) {
     showToast(`Error: ${err.message}`, "error");
   }
@@ -723,7 +503,6 @@ async function submitVolunteerPickupOtp(e, donationId) {
     closeModal();
     showToast("✅ Pickup Verified! Food now in transit to NGO.", "success");
     await fetchDonations();
-    await fetchLedger();
   } catch (err) {
     showToast(err.message, "error");
   }
@@ -802,7 +581,6 @@ async function submitVolunteerDelivery(e, donationId) {
     closeModal();
     showToast("🎉 Delivery Verified! Food successfully rescued and fed!", "success");
     await fetchDonations();
-    await fetchLedger();
     await refreshPlatformData();
   } catch (err) {
     showToast(err.message, "error");
@@ -857,26 +635,15 @@ function bindFormControls() {
         const data = await res.json();
         if (!data.success) throw new Error(data.error);
 
-        showToast("📦 Surplus Food Listed & Registered on Ledger!", "success");
+        showToast("📦 Surplus Food Listed!", "success");
         donForm.reset();
         hoursDisplay.textContent = "4.0h";
 
         await fetchDonations();
-        await fetchLedger();
         await refreshPlatformData();
       } catch (err) {
         showToast(`Error: ${err.message}`, "error");
       }
-    });
-  }
-
-  // Audit Ledger Re-verify Button
-  const btnAuditReverify = document.getElementById("btnAuditReverify");
-  if (btnAuditReverify) {
-    btnAuditReverify.addEventListener("click", async () => {
-      await fetchLedger();
-      const valid = state.ledger.verification?.ok;
-      showToast(valid ? "SHA-256 audit hash chain verified." : "Audit hash chain verification failed.", valid ? "success" : "error");
     });
   }
 
@@ -906,30 +673,7 @@ function bindFormControls() {
    7. I18N LANGUAGE TOGGLE (English / Kannada ಕನ್ನಡ)
    ========================================================================== */
 function bindI18nToggle() {
-  const btnLang = document.getElementById("btnLangToggle");
-  const langLabel = document.getElementById("langLabel");
-
-  if (!btnLang) return;
-
-  btnLang.addEventListener("click", () => {
-    state.currentLang = state.currentLang === "en" ? "kn" : "en";
-    langLabel.textContent = state.currentLang === "en" ? "English" : "ಕನ್ನಡ";
-
-    const dict = i18n[state.currentLang];
-    document.querySelectorAll("[data-i18n]").forEach((el) => {
-      const key = el.getAttribute("data-i18n");
-      if (dict[key]) {
-        el.textContent = dict[key];
-      }
-    });
-
-    showToast(
-      state.currentLang === "kn"
-        ? "ಭಾಷೆಯನ್ನು ಕನ್ನಡಕ್ಕೆ ಬದಲಾಯಿಸಲಾಗಿದೆ"
-        : "Language switched to English",
-      "info"
-    );
-  });
+  state.currentLang = window.foodBridgeLanguage?.() || "en";
 }
 
 /* ==========================================================================
@@ -965,7 +709,8 @@ function showToast(message, type = "info") {
 
   const toast = document.createElement("div");
   toast.className = `toast toast-${type}`;
-  toast.textContent = `${type === "success" ? "✅" : type === "error" ? "⚠️" : "ℹ️"} ${message}`;
+  const translatedMessage = window.foodBridgeTranslate?.(message) || message;
+  toast.textContent = `${type === "success" ? "✅" : type === "error" ? "⚠️" : "ℹ️"} ${translatedMessage}`;
 
   container.appendChild(toast);
 

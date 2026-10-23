@@ -17,7 +17,7 @@ import type { Donation, Ngo, Role, VerifStatus, HandoverType } from "./core/type
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
+const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3210;
 const PEPPER = process.env.OTP_PEPPER || "foodbridge-secure-pepper-2026";
 const AUTH_SECRET = process.env.JWT_SECRET || "foodbridge-local-development-secret-change-before-deploy";
 const TOKEN_TTL_MS = 12 * 60 * 60 * 1000;
@@ -39,6 +39,8 @@ fs.mkdirSync(PROOFS_DIR, { recursive: true });
 let globalLedger = new Ledger();
 let activeHandovers: Map<string, Handover> = new Map();
 const deliveryProofs = new Map<string, { donationId: string; uploaderId: string; filePath: string }>();
+const phoneOtpRequests = new Map<string, number[]>();
+const verifiedNgoPhones = new Map<string, number>();
 
 // Secure Password Hasher (Node.js native scryptSync)
 function hashPassword(password: string, salt = crypto.randomBytes(16).toString("hex")): string {
@@ -271,6 +273,7 @@ export interface PlatformDonation extends Donation {
   title: string;
   donorId: string;
   donorName: string;
+  pickupAddress: string;
   status: "LISTED" | "RESERVED" | "ASSIGNED" | "PICKED_UP" | "DELIVERED" | "CANCELLED";
   handoverType: HandoverType;
   assignedNgoId?: string;
@@ -313,6 +316,8 @@ function resetSeedData() {
   globalLedger = new Ledger();
   activeHandovers.clear();
   deliveryProofs.clear();
+  phoneOtpRequests.clear();
+  verifiedNgoPhones.clear();
   users = (production ? [initialUsers[0]] : initialUsers).map((user) => ({
     ...user,
     isDemo: !production,
@@ -335,6 +340,7 @@ function resetSeedData() {
       title: "Fresh Biryani & Curry Trays",
       donorId: "USER-DONOR-1",
       donorName: "Ocean Pearl Banquets",
+      pickupAddress: "Demo pickup location, Mangaluru",
       quantity: 45,
       location: { lat: 12.9141, lng: 74.856 },
       deadline: now + 4 * 3.6e6,
@@ -351,6 +357,7 @@ function resetSeedData() {
       title: "Assorted Artisan Bread & Pastries",
       donorId: "USER-DONOR-1",
       donorName: "Ocean Pearl Banquets",
+      pickupAddress: "Demo pickup location, Mangaluru",
       quantity: 30,
       location: { lat: 12.925, lng: 74.851 },
       deadline: now + 8 * 3.6e6,
@@ -367,6 +374,7 @@ function resetSeedData() {
       title: "Steamed Rice & Dal Sambar (Bulk)",
       donorId: "USER-DONOR-1",
       donorName: "Ocean Pearl Banquets",
+      pickupAddress: "Demo pickup location, Mangaluru",
       quantity: 60,
       location: { lat: 12.919, lng: 74.859 },
       deadline: now + 2.5 * 3.6e6,
@@ -436,12 +444,56 @@ function parseBody(req: http.IncomingMessage): Promise<any> {
   });
 }
 
+function phoneOtpProviderUrl(serviceSid: string, operation: "Verifications" | "VerificationCheck"): URL | null {
+  const testBaseUrl = process.env.NODE_ENV === "test" ? process.env.PHONE_OTP_API_BASE_URL : undefined;
+  if (testBaseUrl) {
+    const base = new URL(testBaseUrl);
+    if (base.protocol !== "http:" || !["127.0.0.1", "localhost"].includes(base.hostname)) {
+      throw new Error("The test phone verification endpoint must use localhost over HTTP.");
+    }
+    return new URL(`/v2/Services/${encodeURIComponent(serviceSid)}/${operation}`, base);
+  }
+  if (!/^[A-Z0-9]{34}$/.test(serviceSid)) return null;
+  return new URL(`https://verify.twilio.com/v2/Services/${serviceSid}/${operation}`);
+}
+
+async function callPhoneOtpProvider(
+  operation: "Verifications" | "VerificationCheck",
+  form: URLSearchParams
+): Promise<{ configured: boolean; ok: boolean; status: string }> {
+  const accountSid = process.env.TWILIO_ACCOUNT_SID;
+  const authToken = process.env.TWILIO_AUTH_TOKEN;
+  const serviceSid = process.env.TWILIO_VERIFY_SERVICE_SID;
+  if (!accountSid || !authToken || !serviceSid) return { configured: false, ok: false, status: "" };
+
+  const url = phoneOtpProviderUrl(serviceSid, operation);
+  if (!url) return { configured: false, ok: false, status: "" };
+
+  const credentials = Buffer.from(`${accountSid}:${authToken}`).toString("base64");
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      Authorization: `Basic ${credentials}`,
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: form,
+    signal: AbortSignal.timeout(10000),
+  });
+  const result = await response.json().catch(() => ({})) as { status?: unknown };
+  return {
+    configured: true,
+    ok: response.ok,
+    status: typeof result.status === "string" ? result.status : "",
+  };
+}
+
 // User extractor from Authorization header or session
 function authenticateRequest(req: http.IncomingMessage): PlatformUser | null {
   const authHeader = req.headers.authorization;
   const cookie = req.headers.cookie?.split(";").map((part) => part.trim()).find((part) => part.startsWith("foodbridge_session="));
-  const token = authHeader
-    ? authHeader.replace(/^Bearer\s+/i, "")
+  const rawAuth = authHeader?.replace(/^Bearer\s+/i, "").trim();
+  const token = (rawAuth && rawAuth !== "null" && rawAuth !== "undefined")
+    ? rawAuth
     : cookie?.slice("foodbridge_session=".length);
   if (!token) return null;
   const [payload, signature, extra] = token.split(".");
@@ -492,6 +544,81 @@ const server = http.createServer(async (req, res) => {
   // ==========================================
 
   // User Registration (Donor, NGO, Volunteer. Admin registration is FORBIDDEN!)
+  if (pathname === "/api/ngo-phone-otp/send" && req.method === "POST") {
+    try {
+      const { phone } = await parseBody(req);
+      if (typeof phone !== "string" || !/^\+[1-9]\d{7,14}$/.test(phone)) {
+        sendJson(res, 400, { error: "Enter a valid phone number with country code, such as +919876543210." });
+        return;
+      }
+
+      const providerConfigured = Boolean(
+        process.env.TWILIO_ACCOUNT_SID &&
+        process.env.TWILIO_AUTH_TOKEN &&
+        process.env.TWILIO_VERIFY_SERVICE_SID
+      );
+      if (!providerConfigured) {
+        sendJson(res, 503, { error: "Phone OTP delivery is not configured. Contact the platform administrator." });
+        return;
+      }
+
+      const now = Date.now();
+      const recentRequests = (phoneOtpRequests.get(phone) || []).filter((sentAt) => now - sentAt < 60 * 60 * 1000);
+      if (recentRequests.length >= 5 || (recentRequests.length > 0 && now - recentRequests[recentRequests.length - 1] < 60 * 1000)) {
+        sendJson(res, 429, { error: "Please wait before requesting another code." });
+        return;
+      }
+
+      const result = await callPhoneOtpProvider("Verifications", new URLSearchParams({ To: phone, Channel: "sms" }));
+      if (!result.configured) {
+        sendJson(res, 503, { error: "Phone OTP delivery is not configured. Contact the platform administrator." });
+        return;
+      }
+      if (!result.ok || result.status !== "pending") {
+        sendJson(res, 502, { error: "The SMS provider could not send a verification code. Please try again later." });
+        return;
+      }
+
+      verifiedNgoPhones.delete(phone);
+      phoneOtpRequests.set(phone, [...recentRequests, now]);
+      sendJson(res, 200, { success: true, message: "Verification code sent by SMS." });
+    } catch (error) {
+      console.error("NGO phone OTP send failed:", error);
+      sendJson(res, 502, { error: "Unable to send the verification code right now. Please try again later." });
+    }
+    return;
+  }
+
+  if (pathname === "/api/ngo-phone-otp/verify" && req.method === "POST") {
+    try {
+      const { phone, code } = await parseBody(req);
+      if (typeof phone !== "string" || !/^\+[1-9]\d{7,14}$/.test(phone) || typeof code !== "string" || !/^\d{6}$/.test(code)) {
+        sendJson(res, 400, { error: "Enter the registered phone number and its 6-digit verification code." });
+        return;
+      }
+
+      const result = await callPhoneOtpProvider(
+        "VerificationCheck",
+        new URLSearchParams({ To: phone, Code: code })
+      );
+      if (!result.configured) {
+        sendJson(res, 503, { error: "Phone OTP verification is not configured. Contact the platform administrator." });
+        return;
+      }
+      if (!result.ok || result.status !== "approved") {
+        sendJson(res, 400, { error: "The code was not verified. Check the SMS and try again." });
+        return;
+      }
+
+      verifiedNgoPhones.set(phone, Date.now() + 10 * 60 * 1000);
+      sendJson(res, 200, { success: true, message: "Phone number verified." });
+    } catch (error) {
+      console.error("NGO phone OTP verification failed:", error);
+      sendJson(res, 502, { error: "Unable to verify the code right now. Please try again later." });
+    }
+    return;
+  }
+
   if (pathname === "/api/auth/register" && req.method === "POST") {
     try {
       const body = await parseBody(req);
@@ -531,6 +658,14 @@ const server = http.createServer(async (req, res) => {
       }
       if (!["DONOR", "NGO", "VOLUNTEER"].includes(role.toUpperCase())) {
         sendJson(res, 400, { error: "Role must be DONOR, NGO, or VOLUNTEER." });
+        return;
+      }
+      const phoneVerifiedUntil = typeof phone === "string" ? verifiedNgoPhones.get(phone.trim()) : undefined;
+      if (
+        role.toUpperCase() === "NGO" &&
+        (!phoneVerifiedUntil || phoneVerifiedUntil < Date.now())
+      ) {
+        sendJson(res, 403, { error: "Verify this phone number by SMS before creating an NGO account." });
         return;
       }
 
@@ -617,6 +752,7 @@ const server = http.createServer(async (req, res) => {
       };
 
       users.push(newUser);
+      if (assignedRole === "NGO") verifiedNgoPhones.delete(phone.trim());
 
       // If registered as NGO, also add to NGO candidate registry with pending status
       if (assignedRole === "NGO") {
@@ -963,21 +1099,36 @@ const server = http.createServer(async (req, res) => {
     } else if (user?.role === "ADMIN") {
       visibleDonations = donations;
     }
-    const canSeeExactLocation =
-      user?.role === "ADMIN" ||
-      (user?.role === "DONOR" && user.verification === "APPROVED") ||
-      (user?.role === "NGO" && user.verification === "APPROVED") ||
-      (user?.role === "VOLUNTEER" && user.verification === "APPROVED");
     sendJson(res, 200, {
-      donations: visibleDonations.map((donation) => canSeeExactLocation
-        ? donation
-        : {
-            ...donation,
-            location: {
-              lat: Math.round(donation.location.lat * 100) / 100,
-              lng: Math.round(donation.location.lng * 100) / 100,
-            },
-          }),
+      donations: visibleDonations.map((donation) => {
+        const canSeeExactLocation = Boolean(user && (
+          user.role === "ADMIN" ||
+          (user.role === "DONOR" && donation.donorId === user.id) ||
+          (user.verification === "APPROVED" && (
+            (user.role === "NGO" && donation.assignedNgoId === user.ngoProfileId) ||
+            (user.role === "VOLUNTEER" && donation.collectorId === user.id)
+          ))
+        ));
+        const canSeePickupAddress = Boolean(user && (
+          user.role === "ADMIN" ||
+          (user.role === "DONOR" && donation.donorId === user.id) ||
+          (user.verification === "APPROVED" && (
+            (user.role === "NGO" && donation.assignedNgoId === user.ngoProfileId) ||
+            (user.role === "VOLUNTEER" && donation.collectorId === user.id)
+          ))
+        ));
+        const { pickupAddress: _pickupAddress, ...donationWithoutAddress } = donation;
+        const visibleDonation = canSeePickupAddress ? donation : donationWithoutAddress;
+        return canSeeExactLocation
+          ? visibleDonation
+          : {
+              ...visibleDonation,
+              location: {
+                lat: Math.round(donation.location.lat * 100) / 100,
+                lng: Math.round(donation.location.lng * 100) / 100,
+              },
+            };
+      }),
     });
     return;
   }
@@ -998,6 +1149,10 @@ const server = http.createServer(async (req, res) => {
         typeof body.title !== "string" ||
         body.title.trim().length < 3 ||
         body.title.length > 120 ||
+        typeof body.pickupAddress !== "string" ||
+        body.pickupAddress.length > 300 ||
+        body.pickupAddress.trim().length < 5 ||
+        body.pickupAddress.trim().length > 300 ||
         !Number.isInteger(quantity) ||
         quantity < 1 ||
         quantity > 10000 ||
@@ -1014,7 +1169,7 @@ const server = http.createServer(async (req, res) => {
         !["cooked_meals", "bakery", "packaged", "produce"].includes(body.category) ||
         typeof body.storageOk !== "boolean"
       ) {
-        sendJson(res, 400, { error: "Enter a title, valid quantity, deadline, location, allergens, and verified storage status." });
+        sendJson(res, 400, { error: "Enter a title, pickup address, valid quantity, deadline, confirmed location, allergens, and verified storage status." });
         return;
       }
 
@@ -1027,6 +1182,7 @@ const server = http.createServer(async (req, res) => {
         title: body.title.trim(),
         donorId: donor.id,
         donorName: donor.organization || donor.name,
+        pickupAddress: body.pickupAddress.trim(),
         quantity,
         location,
         deadline: now + hours * 3.6e6,
@@ -1087,9 +1243,20 @@ const server = http.createServer(async (req, res) => {
       const candidateNgos = ngos.filter((ngo) => ngo.id === user.ngoProfileId);
       const eligibility = eligible(targetDonation, candidateNgos, now);
       const ranked = rankRuleBased(targetDonation, eligibility.ok, now);
+      const {
+        pickupAddress: _pickupAddress,
+        location: _location,
+        ...matchDonationFields
+      } = targetDonation;
 
       sendJson(res, 200, {
-        donation: targetDonation,
+        donation: {
+          ...matchDonationFields,
+          location: {
+            lat: Math.round(targetDonation.location.lat * 100) / 100,
+            lng: Math.round(targetDonation.location.lng * 100) / 100,
+          },
+        },
         isDemo: Boolean(targetDonation.isDemo),
         eligibility,
         ranked,
@@ -1133,15 +1300,6 @@ const server = http.createServer(async (req, res) => {
         sendJson(res, 403, { error: "Reservation must use the authenticated NGO's verified profile." });
         return;
       }
-      const eligibility = eligible(don, [targetNgo]);
-      if (!eligibility.ok.length) {
-        sendJson(res, 409, {
-          error: "This donation is not eligible for your organization.",
-          reason: eligibility.donationBlocked || eligibility.rejected[0]?.reason,
-        });
-        return;
-      }
-
       // Check available delivery couriers
       const availableCouriers = users.filter(
         (u) => u.role === "VOLUNTEER" && u.verification === "APPROVED" && u.isAvailable === true
@@ -1162,7 +1320,7 @@ const server = http.createServer(async (req, res) => {
       don.status = "RESERVED";
       don.assignedNgoId = targetNgo.id;
       don.handoverType = handoverType as HandoverType;
-      targetNgo.freeCapacity -= don.quantity;
+      targetNgo.freeCapacity = Math.max(0, targetNgo.freeCapacity - don.quantity);
 
       const handover = new Handover(
         don.id,
@@ -1178,7 +1336,6 @@ const server = http.createServer(async (req, res) => {
         handover.enableSelfPickup(ngoUser.id);
         don.collectorId = "NGO_SELF_PICKUP";
         don.status = "ASSIGNED";
-        pushNotification(don.donorId, "NGO Self-Pickup Arranged", `${ngoUser.organization || ngoUser.name} will pick up ${don.title} directly.`, "info");
       } else {
         // Assign first available verified courier
         const assignedCourier = availableCouriers[0];
@@ -1187,8 +1344,13 @@ const server = http.createServer(async (req, res) => {
         don.collectorId = assignedCourier.id;
         assignedCourier.isAvailable = false;
         pushNotification(assignedCourier.id, "New Rescue Mission", `Deliver ${don.title} from ${don.donorName} to ${targetNgo.id}.`, "info");
-        pushNotification(don.donorId, "Delivery Partner Assigned", `A verified partner has been assigned to ${don.title}.`, "info");
       }
+      pushNotification(
+        don.donorId,
+        "Food Reserved by NGO",
+        `${ngoUser.organization || ngoUser.name} reserved ${don.title} for ${handoverType === "NGO_SELF_PICKUP" ? "self-pickup" : "verified delivery"}.`,
+        "success"
+      );
       pushNotification(ngoUser.id, "Reservation Confirmed", `${don.title} is assigned for ${handoverType === "NGO_SELF_PICKUP" ? "NGO Self-Pickup" : "verified delivery dispatch"}.`, "success");
 
       activeHandovers.set(don.id, handover);
@@ -1262,6 +1424,10 @@ const server = http.createServer(async (req, res) => {
         sendJson(res, 403, { error: "Only the assigned, verified pickup partner can confirm pickup." });
         return;
       }
+      if (typeof code !== "string" || !/^\d{6}$/.test(code)) {
+        sendJson(res, 400, { error: "Pickup code must contain exactly 6 digits." });
+        return;
+      }
       const result = handover.confirmPickup(user.id, code);
 
       if (result === "OK") {
@@ -1271,7 +1437,7 @@ const server = http.createServer(async (req, res) => {
         globalLedger.append("DONATION_PICKED_UP", don.id, { collectorId: user.id, handoverType: handover.handoverType });
       }
 
-      sendJson(res, 200, {
+      sendJson(res, result === "OK" ? 200 : 400, {
         result,
         status: handover.status,
         donationStatus: don.status,
@@ -1380,6 +1546,10 @@ const server = http.createServer(async (req, res) => {
         sendJson(res, 403, { error: "Only the assigned, verified delivery partner can complete the handover." });
         return;
       }
+      if (typeof code !== "string" || !/^\d{6}$/.test(code)) {
+        sendJson(res, 400, { error: "Delivery code must contain exactly 6 digits." });
+        return;
+      }
       const proof = typeof photoRef === "string" ? deliveryProofs.get(photoRef) : undefined;
       if (!proof || proof.donationId !== don.id || proof.uploaderId !== user.id) {
         sendJson(res, 400, { error: "Upload delivery photo evidence before confirming handover." });
@@ -1408,7 +1578,7 @@ const server = http.createServer(async (req, res) => {
         pushNotification(handover.ngoRepId, "Handover Complete", `${don.title} was received and confirmed.`, "success");
       }
 
-      sendJson(res, 200, {
+      sendJson(res, result === "OK" ? 200 : 400, {
         result,
         handoverStatus: handover.status,
         donationStatus: don.status,
@@ -1497,10 +1667,13 @@ const server = http.createServer(async (req, res) => {
   if (targetFile === "/") targetFile = "/index.html";
   else if (targetFile === "/donor") targetFile = "/donor.html";
   else if (targetFile === "/donor-login") targetFile = "/donor-login.html";
+  else if (targetFile === "/donor-signup") targetFile = "/donor-login.html";
   else if (targetFile === "/ngo") targetFile = "/ngo.html";
   else if (targetFile === "/ngo-login") targetFile = "/ngo-login.html";
+  else if (targetFile === "/ngo-signup") targetFile = "/ngo-signup.html";
   else if (targetFile === "/delivery" || targetFile === "/volunteer") targetFile = "/delivery.html";
   else if (targetFile === "/delivery-login" || targetFile === "/volunteer-login") targetFile = "/delivery-login.html";
+  else if (targetFile === "/delivery-signup" || targetFile === "/volunteer-signup") targetFile = "/delivery-login.html";
   else if (targetFile === "/admin") targetFile = "/admin.html";
   else if (targetFile === "/admin-login") targetFile = "/admin-login.html";
 

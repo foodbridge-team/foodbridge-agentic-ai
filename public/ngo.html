@@ -9,6 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="ngo.css" />
+  <script src="header.js"></script>
 </head>
 <body class="theme-ngo-portal">
   <div class="ambient-glow glow-ngo-1"></div>
@@ -28,6 +29,9 @@
       </div>
 
       <div class="header-right">
+        <button class="control-btn portal-language-toggle" data-language-toggle aria-label="Switch language to Kannada" title="Switch language to Kannada">
+          <span class="btn-icon">🌐</span><span data-language-label>ಕನ್ನಡ</span>
+        </button>
         <div class="user-chip ngo-user-chip">
           <span class="user-avatar" id="ngoAvatar">👩‍⚕️</span>
           <div class="user-details">
@@ -134,6 +138,9 @@
   </div>
 
   <script src="api.js"></script>
+  <script src="i18n.js"></script>
+  <script src="footer.js"></script>
+  <script src="interactions.js"></script>
   <script src="ngo.js"></script>
 </body>
 </html>

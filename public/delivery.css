@@ -4,14 +4,14 @@
    ========================================================================== */
 
 .theme-delivery-portal {
-  background-color: #060a10;
-  color: #f8fafc;
+  background-color: var(--bg-cream);
+  color: var(--text-dark);
 }
 
 .glow-delivery-1 {
   width: 550px;
   height: 550px;
-  background: #06b6d4;
+  background: var(--forest-700);
   top: -120px;
   left: -100px;
 }
@@ -19,19 +19,100 @@
 .glow-delivery-2 {
   width: 450px;
   height: 450px;
-  background: #10b981;
+  background: var(--fresh-green);
   bottom: 0;
   right: -100px;
 }
 
 .delivery-badge-icon {
-  background: rgba(6, 182, 212, 0.15) !important;
-  border-color: rgba(6, 182, 212, 0.35) !important;
-  box-shadow: 0 0 15px rgba(6, 182, 212, 0.25) !important;
+  background: var(--fresh-green-light) !important;
+  border-color: var(--fresh-green-border) !important;
+  box-shadow: var(--shadow-sm) !important;
 }
 
 .delivery-user-chip {
-  border-color: rgba(6, 182, 212, 0.25) !important;
+  border-color: var(--border-active) !important;
+}
+
+.theme-delivery-portal .portal-header {
+  border-color: var(--border-subtle);
+}
+
+.theme-delivery-portal .brand-link,
+.theme-delivery-portal .portal-brand-title {
+  color: var(--forest-900);
+}
+
+.theme-delivery-portal .portal-brand-sub,
+.theme-delivery-portal .user-role-badge,
+.theme-delivery-portal .stat-label {
+  color: var(--text-muted);
+}
+
+.theme-delivery-portal .user-chip,
+.theme-delivery-portal .stat-card {
+  color: var(--text-dark);
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-sm);
+}
+
+.theme-delivery-portal .stat-icon {
+  background: var(--bg-cream);
+}
+
+.theme-delivery-portal .glass-card {
+  min-width: 0;
+  border-color: var(--border-subtle);
+  background: var(--bg-card);
+}
+
+.theme-delivery-portal .card-title-bar h3,
+.theme-delivery-portal .donation-title {
+  color: var(--forest-900);
+}
+
+.theme-delivery-portal .card-caption,
+.theme-delivery-portal .donation-meta {
+  color: var(--text-muted);
+}
+
+.theme-delivery-portal .donation-card {
+  border-color: rgba(45, 106, 79, 0.16);
+  border-radius: 16px;
+  box-shadow: 0 8px 22px rgba(27, 67, 50, 0.07);
+}
+
+.theme-delivery-portal .donation-card:hover {
+  border-color: rgba(45, 106, 79, 0.34);
+  box-shadow: 0 16px 30px rgba(27, 67, 50, 0.12);
+}
+
+.theme-delivery-portal .donation-actions-row .btn {
+  min-height: 46px;
+  padding: 0.7rem 1rem;
+  border-radius: 10px;
+  font-weight: 800;
+  box-shadow: 0 6px 16px rgba(27, 67, 50, 0.16);
+  transition: transform 0.22s ease, box-shadow 0.22s ease, filter 0.22s ease;
+}
+
+.theme-delivery-portal .donation-actions-row .btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(27, 67, 50, 0.2);
+  filter: brightness(1.05);
+}
+
+.theme-delivery-portal .donation-actions-row .btn-cyan {
+  background: linear-gradient(135deg, #047857, #166534);
+}
+
+.theme-delivery-portal .donation-actions-row .btn-primary {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+}
+
+.text-cyan {
+  color: var(--forest-700);
 }
 
 .delivery-stats-banner {
@@ -65,8 +146,8 @@
 }
 
 .route-preview-box {
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--bg-cream);
+  border: 1px solid var(--border-subtle);
   border-radius: 12px;
   padding: 1rem;
   display: flex;
@@ -93,6 +174,56 @@
 .route-line-connect {
   width: 2px;
   height: 18px;
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--border-active);
   margin-left: 4px;
+}
+
+.theme-delivery-portal .otp-entry {
+  max-width: 22rem;
+  font-family: var(--font-code);
+  font-size: 1.5rem;
+  letter-spacing: 0.2em;
+  text-align: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .theme-delivery-portal .donation-actions-row .btn {
+    transition: none;
+  }
+}
+
+@media (max-width: 720px) {
+  .theme-delivery-portal .portal-wrapper {
+    padding: 1rem;
+    gap: 1rem;
+  }
+
+  .theme-delivery-portal .header-right {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .delivery-stats-banner {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.65rem;
+  }
+
+  .theme-delivery-portal .glass-card {
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 420px) {
+  .delivery-stats-banner {
+    grid-template-columns: 1fr;
+  }
+
+  .theme-delivery-portal .header-right {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .theme-delivery-portal .user-chip {
+    width: 100%;
+  }
 }

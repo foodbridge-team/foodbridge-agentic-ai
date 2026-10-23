@@ -9,6 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="admin.css" />
+  <script src="header.js"></script>
 </head>
 <body class="theme-admin-portal">
   <div class="portal-wrapper">
@@ -25,6 +26,9 @@
       </div>
 
       <div class="header-right">
+        <button class="control-btn portal-language-toggle" data-language-toggle aria-label="Switch language to Kannada" title="Switch language to Kannada">
+          <span class="btn-icon">🌐</span><span data-language-label>ಕನ್ನಡ</span>
+        </button>
         <div class="user-chip">
           <span class="user-avatar">👨‍⚖️</span>
           <div class="user-details">
@@ -76,7 +80,44 @@
 
     <!-- Main Workspace -->
     <main class="admin-workspace">
-      <!-- Section 1: Verification Applications Queue -->
+      <!-- Section 1: Tri-Role Live Operations & Platform Activity Stream -->
+      <section class="glass-card ops-hub-card">
+        <div class="card-title-bar">
+          <div class="card-icon-badge" style="background:var(--fresh-green-light);color:var(--forest-800)">📡</div>
+          <div style="flex:1">
+            <h3>Tri-Role Live Operations &amp; Platform Activity Stream</h3>
+            <p class="card-caption">Real-time surveillance across Food Donors, Receiving NGOs, and Delivery Couriers</p>
+          </div>
+          <div class="ops-controls-bar">
+            <span class="ops-live-pulse">
+              <span class="footer-status-dot" aria-hidden="true"></span>
+              <span>Network Live</span>
+            </span>
+            <button id="btnRefreshOps" class="btn btn-sm btn-outline">🔄 Refresh Stream</button>
+          </div>
+        </div>
+
+        <!-- Filter Tabs & Search Bar -->
+        <div class="ops-filter-container">
+          <div class="ops-tabs" role="tablist">
+            <button type="button" class="ops-tab active" data-filter="all">🌐 All Network Activities (<span id="countAllOps">0</span>)</button>
+            <button type="button" class="ops-tab" data-filter="donor">🏪 Food Donors (<span id="countDonorOps">0</span>)</button>
+            <button type="button" class="ops-tab" data-filter="ngo">🏢 Receiving NGOs (<span id="countNgoOps">0</span>)</button>
+            <button type="button" class="ops-tab" data-filter="courier">🚴 Courier Missions (<span id="countCourierOps">0</span>)</button>
+            <button type="button" class="ops-tab" data-filter="delivered">✅ Delivered Proofs (<span id="countDeliveredOps">0</span>)</button>
+          </div>
+          <div class="ops-search-wrap">
+            <input type="text" id="opsSearchInput" class="form-input ops-search-input" placeholder="Search by meal, donor, NGO shelter, or courier..." aria-label="Search activities" />
+          </div>
+        </div>
+
+        <!-- Operations Activity Stream Container -->
+        <div id="adminOperationsStream" class="admin-operations-stream" aria-live="polite">
+          <!-- Rendered dynamically via admin.js -->
+        </div>
+      </section>
+
+      <!-- Section 2: Verification Applications Queue -->
       <section class="glass-card">
         <div class="card-title-bar">
           <div class="card-icon-badge">📋</div>
@@ -162,6 +203,9 @@
   <section id="accountNotifications" class="notifications-panel" aria-live="polite"></section>
 
   <script src="api.js"></script>
+  <script src="i18n.js"></script>
+  <script src="footer.js"></script>
+  <script src="interactions.js"></script>
   <script src="admin.js"></script>
 </body>
 </html>

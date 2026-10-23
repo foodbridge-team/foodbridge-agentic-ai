@@ -33,24 +33,22 @@ document.addEventListener("DOMContentLoaded", () => {
     })
     .catch((error) => showError(error.message));
 
-  // Mode Toggle (Sign In vs Register)
+  const isSignupPage = window.location.pathname.includes("-signup");
+  const roleLabels = {
+    DONOR: "Donor",
+    NGO: "NGO / Shelter",
+    VOLUNTEER: "Delivery Partner",
+  };
+  document.title = `${isSignupPage ? "Create Account" : "Sign In"} — ${roleLabels[currentRole] || "FoodBridge"} — FoodBridge AI`;
+  if (window.foodBridgeTranslate) document.title = window.foodBridgeTranslate(document.title);
   if (tabSignIn && tabRegister) {
-    tabSignIn.addEventListener("click", () => {
-      tabSignIn.classList.add("active");
-      tabRegister.classList.remove("active");
-      if (signInSection) signInSection.style.display = "flex";
-      if (registerSection) registerSection.style.display = "none";
-      clearMessages();
-    });
-
-    tabRegister.addEventListener("click", () => {
-      tabRegister.classList.add("active");
-      tabSignIn.classList.remove("active");
-      if (signInSection) signInSection.style.display = "none";
-      if (registerSection) registerSection.style.display = "flex";
-      clearMessages();
-    });
+    tabSignIn.classList.toggle("active", !isSignupPage);
+    tabRegister.classList.toggle("active", isSignupPage);
+    tabSignIn.setAttribute("aria-current", isSignupPage ? "false" : "page");
+    tabRegister.setAttribute("aria-current", isSignupPage ? "page" : "false");
   }
+  if (signInSection) signInSection.style.display = isSignupPage ? "none" : "flex";
+  if (registerSection) registerSection.style.display = isSignupPage ? "flex" : "none";
 
   function clearMessages() {
     if (errorBox) { errorBox.style.display = "none"; errorBox.textContent = ""; }
@@ -61,12 +59,18 @@ document.addEventListener("DOMContentLoaded", () => {
   if (btnDemoLogin) {
     btnDemoLogin.addEventListener("click", () => {
       let email = "donor@oceanpearl.com";
-      if (currentRole === "NGO") email = "ngo@sevatrust.org";
-      if (currentRole === "VOLUNTEER") email = "rider@foodbridge.org";
-      if (currentRole === "ADMIN") email = "admin@foodbridge.org";
+      let pwd = "password123";
 
-      if (currentRole === "ADMIN") return;
-      const pwd = "password123";
+      if (currentRole === "NGO") {
+        email = "ngo@sevatrust.org";
+        pwd = "password123";
+      } else if (currentRole === "VOLUNTEER") {
+        email = "rider@foodbridge.org";
+        pwd = "password123";
+      } else if (currentRole === "ADMIN") {
+        email = "admin@foodbridge.org";
+        pwd = "adminSecure2026!";
+      }
 
       const emailField = document.getElementById("emailInput");
       const pwdField = document.getElementById("passwordInput");
@@ -156,6 +160,9 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!res.ok || !data.success) {
           throw new Error(data.error || "Registration failed");
         }
+        if (data.user.role !== currentRole) {
+          throw new Error("The registration response did not match the selected role portal.");
+        }
 
         // Store session
         localStorage.removeItem("foodbridge_token");
@@ -165,10 +172,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Redirect after brief pause
         setTimeout(() => {
-          let targetUrl = "donor.html";
-          if (currentRole === "NGO") targetUrl = "ngo.html";
-          if (currentRole === "VOLUNTEER") targetUrl = "delivery.html";
-          window.location.href = targetUrl;
+          window.location.href = portalForRole(currentRole);
         }, 1800);
       } catch (err) {
         showError(err.message);
@@ -200,22 +204,27 @@ document.addEventListener("DOMContentLoaded", () => {
         throw new Error(data.error || "Login failed");
       }
 
+      if (data.user.role !== role) {
+        throw new Error("This account does not belong to the selected role portal.");
+      }
       localStorage.removeItem("foodbridge_token");
       localStorage.setItem("foodbridge_user", JSON.stringify(data.user));
-
-      let redirectUrl = "donor.html";
-      if (data.user.role === "NGO") redirectUrl = "ngo.html";
-      if (data.user.role === "VOLUNTEER") redirectUrl = "delivery.html";
-      if (data.user.role === "ADMIN") redirectUrl = "admin.html";
-
-      window.location.href = redirectUrl;
+      window.location.href = portalForRole(role);
     } catch (err) {
       showError(err.message);
       if (submitBtn) {
         submitBtn.disabled = false;
         submitBtn.textContent = "Sign In ➔";
       }
+
     }
+  }
+
+  function portalForRole(role) {
+    if (role === "NGO") return "/ngo";
+    if (role === "VOLUNTEER") return "/delivery";
+    if (role === "DONOR") return "/donor";
+    return "/admin";
   }
 
   function showError(msg) {

@@ -94,21 +94,22 @@ model VerificationDocument {
 
 // Food donation listings
 model Donation {
-  id          String         @id @default(uuid())
-  donorId     String
-  donor       User           @relation("DonationDonor", fields: [donorId], references: [id])
-  title       String
-  category    String
-  quantity    Int
-  allergens   String[]
-  storageOk   Boolean        @default(false)
-  lat         Float
-  lng         Float
-  deadline    DateTime
-  status      DonationStatus @default(LISTED)
-  isDemo      Boolean        @default(false)
-  createdAt   DateTime       @default(now())
-  reservation Reservation?
+  id            String         @id @default(uuid())
+  donorId       String
+  donor         User           @relation("DonationDonor", fields: [donorId], references: [id])
+  title         String
+  pickupAddress String
+  category      String
+  quantity      Int
+  allergens     String[]
+  storageOk     Boolean        @default(false)
+  lat           Float
+  lng           Float
+  deadline      DateTime
+  status        DonationStatus @default(LISTED)
+  isDemo        Boolean        @default(false)
+  createdAt     DateTime       @default(now())
+  reservation   Reservation?
   deliveryProof DeliveryProof?
 }
 

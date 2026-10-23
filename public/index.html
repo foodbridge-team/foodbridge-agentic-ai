@@ -11,11 +11,11 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
 
-  <!-- Leaflet Map CSS -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-
   <!-- Main Stylesheet -->
   <link rel="stylesheet" href="style.css" />
+
+  <!-- Universal Header & Theme Script -->
+  <script src="header.js"></script>
 </head>
 <body>
   <!-- Glowing Background Ambience -->
@@ -24,8 +24,8 @@
   <div class="ambient-glow glow-3"></div>
 
   <div class="app-shell">
-    <!-- Top Bar Navigation -->
-    <header class="app-nav">
+    <!-- Top Bar Navigation (Standardized Universal Header) -->
+    <header class="app-nav site-universal-header" id="siteHeader">
       <div class="nav-left">
         <a href="index.html" class="brand-badge" style="text-decoration:none">
           <div class="brand-logo-glow">
@@ -61,20 +61,17 @@
             <span class="kpi-lbl">Active Deliveries</span>
           </div>
         </div>
-        <div class="kpi-chip ledger-kpi">
-          <span class="pulse-indicator online"></span>
-          <div class="kpi-text">
-            <span class="kpi-val text-emerald" id="metricLedgerBlocks">SHA-256</span>
-            <span class="kpi-lbl">Ledger Integrity</span>
-          </div>
-        </div>
       </div>
 
       <!-- Nav Controls & Login Links -->
       <div class="nav-controls">
-        <button id="btnLangToggle" class="control-btn" title="Toggle English / Kannada">
+        <button type="button" class="control-btn theme-toggle-btn" id="btnThemeToggle" aria-label="Switch to Light Mode" title="Switch to Light Mode">
+          <span class="theme-icon-indicator" aria-hidden="true">☀️</span>
+          <span class="theme-label-text">Light Mode</span>
+        </button>
+        <button id="btnLangToggle" class="control-btn portal-language-toggle" data-language-toggle aria-label="Switch language to Kannada" title="Switch language to Kannada">
           <span class="btn-icon">🌐</span>
-          <span id="langLabel">English</span>
+          <span id="langLabel" data-language-label>ಕನ್ನಡ</span>
         </button>
         <button id="btnResetDemo" class="control-btn" title="Administrator-only demo reset" hidden>
           <span class="btn-icon">🔄</span>
@@ -82,8 +79,6 @@
         </button>
       </div>
     </header>
-
-    <p id="demoDataNotice" class="demo-data-notice" hidden>Demo environment — sample accounts and food listings are labeled Demo.</p>
 
     <!-- Hero Showcase Section -->
     <section class="hero-gateway">
@@ -97,11 +92,6 @@
         <p class="hero-desc">
           FoodBridge AI helps verified donors connect safe, eligible food with nearby shelters, then records each confirmed pickup and handover.
         </p>
-        <div class="hero-actions-bar">
-          <a href="donor-login.html" class="cta-btn cta-donate">Donate food <span aria-hidden="true">→</span></a>
-          <a href="ngo-login.html" class="cta-btn cta-find">Find food <span aria-hidden="true">→</span></a>
-          <a href="delivery-login.html" class="cta-btn cta-volunteer">Volunteer for delivery <span aria-hidden="true">→</span></a>
-        </div>
       </div>
 
       <!-- 3 DEDICATED SEPARATE ROLE GATEWAY CARDS -->
@@ -112,19 +102,17 @@
             <span class="gateway-icon">🏪</span>
             <span class="gateway-tag">For Restaurants & Caterers</span>
           </div>
-          <h3>Food Donor Portal</h3>
-          <p>List banquet excess, bakery items, or produce. Pair with nearby shelters via deterministic AI matching and secure pickup with 6-digit OTPs.</p>
-          <ul class="gateway-perks">
-            <li><span>✓</span> Instant AI feasibility matching</li>
-            <li><span>✓</span> Salted HMAC-SHA256 pickup verification</li>
-            <li><span>✓</span> Confirmation-based pickup tracking</li>
-          </ul>
+          <h3 class="donor-title-reveal"><span>Food Donor Portal</span></h3>
+          <div class="gateway-features">
+            <div class="gf-item"><span class="gf-icon">🤖</span><span>AI-powered NGO matching</span></div>
+            <div class="gf-item"><span class="gf-icon">🔑</span><span>Secure 6-digit pickup OTP</span></div>
+            <div class="gf-item"><span class="gf-icon">📍</span><span>Location-verified handover</span></div>
+          </div>
           <div class="gateway-actions">
             <a href="donor-login.html" class="btn btn-primary btn-block">
-              <span>🏪 Donor Login ➔</span>
-            </a>
-            <a href="donor.html" class="btn btn-sm btn-outline btn-block" style="text-align:center">
-              Direct Donor Dashboard
+              <span class="gateway-login-icon" aria-hidden="true">🏪</span>
+              <span>Donor Login</span>
+              <span class="gateway-login-arrow" aria-hidden="true">➔</span>
             </a>
           </div>
         </div>
@@ -136,18 +124,16 @@
             <span class="gateway-tag">For Shelters & Kitchens</span>
           </div>
           <h3>NGO & Shelter Hub</h3>
-          <p>Browse available food donations in your radius. Reserve meals within your intake capacity, screen allergens, and issue delivery handover codes.</p>
-          <ul class="gateway-perks">
-            <li><span>✓</span> Live surplus food discovery feed</li>
-            <li><span>✓</span> Allergen & temperature safety check</li>
-            <li><span>✓</span> Receiving delivery OTP inspection</li>
-          </ul>
+          <div class="gateway-features">
+            <div class="gf-item"><span class="gf-icon">🍽️</span><span>Live surplus food discovery</span></div>
+            <div class="gf-item"><span class="gf-icon">🛡️</span><span>Allergen & safety screening</span></div>
+            <div class="gf-item"><span class="gf-icon">🤝</span><span>OTP-secured handover receipt</span></div>
+          </div>
           <div class="gateway-actions">
-            <a href="ngo-login.html" class="btn btn-cyan btn-block" style="background:linear-gradient(135deg,#8b5cf6,#6d28d9);box-shadow:0 4px 18px rgba(139,92,246,0.3)">
-              <span>🏢 NGO Shelter Login ➔</span>
-            </a>
-            <a href="ngo.html" class="btn btn-sm btn-outline btn-block" style="text-align:center">
-              Direct NGO Dashboard
+            <a href="ngo-login.html" class="btn btn-cyan btn-block gateway-login-ngo">
+              <span class="gateway-login-icon" aria-hidden="true">🏢</span>
+              <span>NGO Login</span>
+              <span class="gateway-login-arrow" aria-hidden="true">➔</span>
             </a>
           </div>
         </div>
@@ -159,99 +145,66 @@
             <span class="gateway-tag">For Couriers & Volunteers</span>
           </div>
           <h3>Delivery Dispatch Hub</h3>
-          <p>Become an eligible delivery partner, confirm donor pickup, and record the NGO handover with photo evidence.</p>
-          <ul class="gateway-perks">
-            <li><span>✓</span> Verified partner assignments</li>
-            <li><span>✓</span> Two-stage OTP verification protocol</li>
-            <li><span>✓</span> Photo evidence for completion</li>
-          </ul>
+          <p class="role-card-desc">Deliver rescued surplus food safely with cryptographic proof of delivery.</p>
           <div class="gateway-actions">
-            <a href="delivery-login.html" class="btn btn-cyan btn-block">
-              <span>🚴 Volunteer Rider Login ➔</span>
-            </a>
-            <a href="delivery.html" class="btn btn-sm btn-outline btn-block" style="text-align:center">
-              Direct Rider Dashboard
+            <a href="delivery-login.html" class="btn btn-cyan btn-block gateway-login-delivery">
+              <span class="gateway-login-icon" aria-hidden="true">🚴</span>
+              <span>Volunteer / Rider Login</span>
+              <span class="gateway-login-arrow" aria-hidden="true">➔</span>
             </a>
           </div>
         </div>
       </div>
     </section>
 
-    <section class="how-it-works">
-      <div class="how-heading">
-        <span class="tagline-badge">🤝 A safer path from kitchen to community</span>
-        <h2>How FoodBridge works</h2>
+    <!-- Interactive Surplus Food Redistribution Protocol (4 Steps, replaces map) -->
+    <section class="workflow-section" id="howItWorks">
+      <div class="workflow-header">
+        <div class="workflow-badge">⚡ Safe &amp; Cryptographically Verified</div>
+        <h2 class="workflow-title">How FoodBridge AI Works</h2>
+        <p class="workflow-subtitle">From banquet surplus to community shelter — matching, transit and handover verified in 4 steps.</p>
       </div>
-      <div class="how-steps">
-        <article class="how-step"><span>01</span><h3>Verify partners</h3><p>Admins review donor and shelter applications before they can publish or reserve food.</p></article>
-        <article class="how-step"><span>02</span><h3>Match safe food</h3><p>Eligibility checks consider freshness window, storage, quantity, distance, accepted categories, and allergens.</p></article>
-        <article class="how-step"><span>03</span><h3>Confirm the handover</h3><p>A delivery partner or NGO self-pickup records pickup and confirms receipt before an item is marked delivered.</p></article>
-      </div>
-    </section>
-
-    <!-- Live Geographic Map Section -->
-    <section class="map-section">
-      <div class="map-header">
-        <div class="map-title-wrap">
-          <span class="live-dot"></span>
-          <h2>Live City Rescue Network & Transit Map</h2>
-          <span class="map-coords" id="currentCityLabel">Mangaluru, Karnataka</span>
+      <div class="workflow-grid">
+        <div class="workflow-card">
+          <span class="workflow-card-step">01</span>
+          <div class="workflow-card-icon">🍲</div>
+          <h3 class="workflow-card-title">List Fresh Surplus</h3>
+          <p class="workflow-card-desc">Donors post warm meals or bakery surplus with temperature-controlled status, allergen declarations, and pickup expiration window.</p>
+          <div class="workflow-card-pill">⏱️ Safe Expiry Window</div>
         </div>
-        <div class="map-legend">
-          <span class="legend-item"><span class="legend-color donor-color"></span> Donors</span>
-          <span class="legend-item"><span class="legend-color ngo-color"></span> NGOs</span>
-          <span class="legend-item"><span class="legend-color transit-color"></span> Riders in Transit</span>
+        <div class="workflow-card">
+          <span class="workflow-card-step">02</span>
+          <div class="workflow-card-icon">🤖</div>
+          <h3 class="workflow-card-title">Instant AI Match</h3>
+          <p class="workflow-card-desc">Deterministic rules screen shelter capacity and dietary rules first, then ranking optimizes transit time to prioritize the best recipient.</p>
+          <div class="workflow-card-pill">🎯 Feasibility Checked</div>
         </div>
-      </div>
-      <div class="map-container-wrap">
-        <div id="rescueMap" class="rescue-map"></div>
-      </div>
-    </section>
-
-    <!-- Cryptographic SHA-256 Audit Ledger Visualizer -->
-    <section class="glass-card ledger-showcase-card">
-      <div class="card-title-bar">
-        <div class="card-icon-badge">🛡️</div>
-        <div>
-          <h3>Live Cryptographic SHA-256 Audit Ledger</h3>
-          <p class="card-caption">Immutable hash-chained public audit trail of every food redistribution lifecycle event</p>
+        <div class="workflow-card">
+          <span class="workflow-card-step">03</span>
+          <div class="workflow-card-icon">🔐</div>
+          <h3 class="workflow-card-title">Two-Stage OTP</h3>
+          <p class="workflow-card-desc">Donor generates a single-use pickup OTP for the courier; receiving NGO generates a separate delivery OTP upon verifying package seals.</p>
+          <div class="workflow-card-pill">🔒 HMAC-SHA256 Protected</div>
         </div>
-      </div>
-
-      <div class="ledger-actions-row">
-        <div id="auditBadgeChain" class="badge badge-success">
-          <span class="badge-dot"></span> Checking audit chain…
+        <div class="workflow-card">
+          <span class="workflow-card-step">04</span>
+          <div class="workflow-card-icon">🛡️</div>
+          <h3 class="workflow-card-title">Tamper-Proof Ledger</h3>
+          <p class="workflow-card-desc">Mandatory delivery photo proof and confirmed quantity are recorded onto a SHA-256 hash-chained immutable audit log.</p>
+          <div class="workflow-card-pill">📜 100% Audit Verified</div>
         </div>
-        <button id="btnAuditReverify" class="btn btn-sm btn-outline">
-          <span>🔄 Re-verify Cryptographic Hash Chain</span>
-        </button>
-      </div>
-
-      <div id="auditLedgerStream" class="ledger-chain-view" style="max-height:300px">
-        <!-- Rendered via JS -->
       </div>
     </section>
 
     <!-- Toast Notification -->
     <div id="toastContainer" class="toast-container"></div>
-
-    <!-- Footer -->
-    <footer class="app-footer">
-      <div class="footer-inner">
-        <div class="footer-brand">
-          <span>🌱 FoodBridge AI</span> — Separate Portals for Donors, NGOs & Volunteer Couriers
-        </div>
-        <div class="footer-links">
-          <span>Node.js v24 Native TypeScript • Zero Dependencies • Leaflet OpenStreetMap</span>
-        </div>
-      </div>
-    </footer>
   </div>
 
-  <!-- Leaflet JS -->
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-  <!-- Main Landing JS -->
+  <!-- Scripts -->
   <script src="api.js"></script>
+  <script src="i18n.js"></script>
+  <script src="footer.js"></script>
+  <script src="interactions.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

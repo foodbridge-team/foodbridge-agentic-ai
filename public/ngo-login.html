@@ -7,7 +7,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="login.css" />
+  <script src="header.js"></script>
 </head>
 <body class="theme-ngo">
   <div class="login-wrapper">
@@ -28,6 +30,11 @@
         <h2>Secure Fresh Meals For Those Who Need It Most</h2>
         <p>Access high-quality surplus meals from banquet halls and food suppliers. Manage intake capacity, ensure allergen safety, and receive food directly through our volunteer fleet or self-pickup.</p>
 
+        <div class="ngo-support-visuals" aria-label="Food donation and community support">
+          <img src="images/ngo-food-donation.svg" alt="Fresh donated meals prepared for pickup" />
+          <img src="images/ngo-community-support.svg" alt="Community members sharing a meal" />
+        </div>
+
         <div class="features-list">
           <div class="feature-item">
             <span class="feature-check">✓</span>
@@ -44,24 +51,22 @@
         </div>
       </div>
 
-      <div class="info-footer">
-        🛡️ Verified NGO Partner Network • Zero Intermediary Waste
-      </div>
     </div>
 
-    <!-- Right Login & Registration Form Panel -->
+    <!-- Right Sign In Form Panel -->
     <div class="form-panel">
-      <!-- Auth Mode Switcher -->
+      <button class="control-btn auth-language-toggle" data-language-toggle aria-label="Switch language to Kannada" title="Switch language to Kannada">
+        <span class="btn-icon">🌐</span><span data-language-label>ಕನ್ನಡ</span>
+      </button>
       <div class="auth-mode-tabs">
-        <button type="button" class="auth-tab active" id="tabSignIn">Sign In</button>
-        <button type="button" class="auth-tab" id="tabRegister">New NGO Registration</button>
+        <a href="/ngo-login.html" class="auth-tab" id="tabSignIn">NGO Login</a>
+        <a href="/ngo-signup.html" class="auth-tab" id="tabRegister">Create NGO Account</a>
       </div>
 
       <!-- Messages -->
       <div id="loginErrorBox" style="display:none;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#b91c1c;padding:0.75rem;border-radius:8px;font-size:0.84rem;font-weight:600"></div>
       <div id="loginSuccessBox" style="display:none;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.35);color:#047857;padding:0.75rem;border-radius:8px;font-size:0.84rem;font-weight:600"></div>
 
-      <!-- SECTION 1: SIGN IN -->
       <div id="signInSection" style="display:flex;flex-direction:column;gap:1.25rem">
         <div class="form-header">
           <h1>NGO Representative Sign In</h1>
@@ -100,81 +105,13 @@
         </form>
       </div>
 
-      <!-- SECTION 2: NGO REGISTRATION WITH LICENSE UPLOAD -->
-      <div id="registerSection" style="display:none;flex-direction:column;gap:1.25rem">
-        <div class="form-header">
-          <h1>Register New NGO / Shelter</h1>
-          <p class="form-subtitle">Registration certificate / license upload required</p>
-        </div>
-
-        <form id="registerForm" class="login-form">
-          <div class="input-group">
-            <label class="input-label" for="regOrg">NGO / Organization Name</label>
-            <input type="text" id="regOrg" class="input-box" placeholder="e.g. Karuna Ashrama Feeding Mission" required />
-          </div>
-
-          <div class="form-row">
-            <div class="input-group">
-              <label class="input-label" for="regName">Authorized Representative</label>
-              <input type="text" id="regName" class="input-box" placeholder="e.g. Anand Kumar" required />
-            </div>
-
-            <div class="input-group">
-              <label class="input-label" for="regCapacity">Daily Intake Capacity</label>
-              <input type="number" id="regCapacity" class="input-box" value="60" min="10" max="1000" placeholder="Meals/day" required />
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="input-group">
-              <label class="input-label" for="regLat">Shelter Latitude</label>
-              <input type="number" id="regLat" class="input-box" min="-90" max="90" step="any" placeholder="12.921" required />
-            </div>
-            <div class="input-group">
-              <label class="input-label" for="regLng">Shelter Longitude</label>
-              <input type="number" id="regLng" class="input-box" min="-180" max="180" step="any" placeholder="74.862" required />
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="input-group">
-              <label class="input-label" for="regEmail">Official Email</label>
-              <input type="email" id="regEmail" class="input-box" placeholder="director@karuna.org" required />
-            </div>
-
-            <div class="input-group">
-              <label class="input-label" for="regPhone">Contact Phone</label>
-              <input type="tel" id="regPhone" class="input-box" placeholder="+91 98450 33445" required />
-            </div>
-          </div>
-
-          <!-- Document Upload -->
-          <div class="input-group">
-            <label class="input-label" for="regLicenseDoc">
-              Registration Document / 80G Charity License (PDF / JPG / PNG) <span style="color:#dc2626">*</span>
-            </label>
-            <input type="file" id="regLicenseDoc" class="input-box" accept=".pdf,.png,.jpg,.jpeg" required />
-            <span style="font-size:0.75rem;color:var(--text-muted)">Admins will review this document before approving your reservation privileges.</span>
-          </div>
-
-          <div class="input-group">
-            <label class="input-label" for="regPassword">Create Password</label>
-            <input type="password" id="regPassword" class="input-box" placeholder="At least 10 characters" minlength="10" required />
-          </div>
-
-          <button type="submit" id="btnSubmitRegister" class="btn-submit">
-            Upload Document & Submit for Approval ➔
-          </button>
-        </form>
-      </div>
-
-      <div class="switch-portal">
-        <span>Are you a delivery courier? <a href="delivery-login.html">Sign in here</a></span>
-      </div>
     </div>
   </div>
 
   <script src="api.js"></script>
+  <script src="i18n.js"></script>
+  <script src="footer.js"></script>
+  <script src="interactions.js"></script>
   <script src="login.js"></script>
 </body>
 </html>

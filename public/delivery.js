@@ -34,6 +34,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       current.isAvailable = data.isAvailable;
       localStorage.setItem("foodbridge_user", JSON.stringify(current));
       renderAvailabilityButton(current.isAvailable);
+      const status = document.querySelector(".user-role-badge");
+      if (status) status.textContent = current.isAvailable ? "Available delivery partner" : "Off-duty delivery partner";
       showToast(data.message, "success");
     } catch (err) {
       showToast(err.message, "error");
@@ -57,54 +59,27 @@ async function fetchDeliveryMissions() {
   try {
     const res = await fetch("/api/donations");
     const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Unable to load delivery missions.");
     const donations = data.donations || [];
 
-    // Available missions = RESERVED
-    const available = [];
     const active = donations.filter((d) => d.status === "ASSIGNED" || d.status === "PICKED_UP");
     const completed = donations.filter((donation) => donation.status === "DELIVERED");
-    document.getElementById("riderCompletedMissions").textContent = completed.length;
-    document.getElementById("riderMealsDelivered").textContent = completed
+    const missionCount = document.getElementById("riderCompletedMissions");
+    const mealsCount = document.getElementById("riderMealsDelivered");
+    const activeCount = document.getElementById("riderActiveCount");
+    if (missionCount) missionCount.textContent = completed.length;
+    if (mealsCount) mealsCount.textContent = completed
       .reduce((total, donation) => total + (donation.deliveredQuantity || donation.quantity), 0);
+    if (activeCount) activeCount.textContent = String(active.length);
 
     // Render available
     if (availableContainer) {
-      if (available.length === 0) {
-        availableContainer.innerHTML = `
+      availableContainer.innerHTML = `
           <div class="empty-state">
             <span class="empty-icon">🛵</span>
-            <p>Verified delivery partners are assigned automatically when an NGO reserves a donation.</p>
+            <p>Dispatch will notify you when a verified, available partner is assigned to an NGO reservation.</p>
           </div>
         `;
-      } else {
-        availableContainer.innerHTML = available
-          .map(
-            (m) => `
-          <div class="donation-card">
-            <div class="donation-card-header">
-              <div class="donation-title-group">
-                <span class="donation-title">${m.title}</span>
-                <span class="donation-meta">From ${m.donorName} ➔ To ${m.assignedNgoId || "Local Shelter"}</span>
-              </div>
-              <span class="status-badge status-RESERVED">Ready</span>
-            </div>
-
-            <div class="donation-stats-row">
-              <span class="stat-pill">🍲 <strong>${m.quantity}</strong> meals</span>
-              <span class="stat-pill">📍 Approx route: <strong>~1.4 km</strong></span>
-              <span class="stat-pill text-cyan">⚡ Standard Insulated Transit</span>
-            </div>
-
-            <div class="donation-actions-row">
-              <button class="btn btn-sm btn-cyan" onclick="riderAcceptMission('${m.id}')">
-                <span>🚴 Accept & Start Rescue</span>
-              </button>
-            </div>
-          </div>
-        `
-          )
-          .join("");
-      }
     }
 
     // Render active console
@@ -158,12 +133,12 @@ async function fetchDeliveryMissions() {
             <div class="route-preview-box">
               <div class="route-point">
                 <span class="point-dot origin"></span>
-                <span><strong>Pickup:</strong> ${escapeHtml(cur.donorName)} (Kitchen)</span>
+                <span><strong>Pickup:</strong> ${escapeHtml(cur.donorName || "Food donor")}</span>
               </div>
               <div class="route-line-connect"></div>
               <div class="route-point">
                 <span class="point-dot dest"></span>
-                <span><strong>Destination:</strong> ${escapeHtml(cur.assignedNgoId || "Receiving NGO")}</span>
+                <span><strong>Destination:</strong> ${escapeHtml(cur.assignedNgoId || "NGO-SEVA-TRUST")}</span>
               </div>
             </div>
 
@@ -178,7 +153,7 @@ async function fetchDeliveryMissions() {
               ${
                 isPickedUp
                   ? `<button class="btn btn-sm btn-primary" onclick="openRiderDeliveryModal('${escapeHtml(cur.id)}', ${cur.quantity})">
-                      <span>📸 Submit Delivery OTP & Camera Proof</span>
+                      <span>📸 Confirm Delivery with NGO OTP</span>
                     </button>`
                   : ""
               }
@@ -188,7 +163,10 @@ async function fetchDeliveryMissions() {
       }
     }
   } catch (err) {
-    console.warn("Delivery missions error:", err);
+    if (activeConsole) {
+      activeConsole.innerHTML = `<div class="empty-state" role="alert"><p>${escapeHtml(err.message || "Unable to load delivery missions.")}</p></div>`;
+    }
+    console.error("Delivery missions error:", err);
   }
 }
 
@@ -199,9 +177,9 @@ function openRiderPickupModal(donationId) {
     <form class="app-form" onsubmit="submitRiderPickupOtp(event, '${donationId}')">
       <div class="form-field">
         <label>Enter 6-digit OTP given by Donor:</label>
-        <input type="text" id="riderPickupCode" class="form-input" style="font-size:1.8rem;text-align:center;letter-spacing:0.2em;font-family:var(--font-code)" maxlength="6" placeholder="000000" required autofocus />
+        <input type="text" id="riderPickupCode" class="form-input otp-entry" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" minlength="6" maxlength="6" placeholder="000000" required autofocus />
       </div>
-      <button type="submit" class="btn btn-cyan btn-block">Confirm Pickup & Start Navigation</button>
+      <button type="submit" class="btn btn-cyan btn-block">Confirm Pickup & Continue Mission</button>
     </form>
   `
   );
@@ -219,8 +197,8 @@ async function submitRiderPickupOtp(e, donationId) {
     });
 
     const data = await res.json();
-    if (data.result !== "OK") {
-      throw new Error(`OTP Verification Failed: ${data.result}`);
+    if (!res.ok || data.result !== "OK" || data.donationStatus !== "PICKED_UP") {
+      throw new Error(data.error || `OTP verification failed: ${data.result || res.status}`);
     }
 
     closeDeliveryModal();
@@ -238,19 +216,19 @@ function openRiderDeliveryModal(donationId, quantity) {
     <form class="app-form" onsubmit="submitRiderDelivery(event, '${donationId}')">
       <div class="form-field">
         <label>Enter Delivery OTP given by NGO Rep:</label>
-        <input type="text" id="riderDeliveryCode" class="form-input" style="font-size:1.8rem;text-align:center;letter-spacing:0.2em;font-family:var(--font-code)" maxlength="6" placeholder="000000" required autofocus />
+        <input type="text" id="riderDeliveryCode" class="form-input otp-entry" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" minlength="6" maxlength="6" placeholder="000000" required autofocus />
       </div>
 
       <div class="form-field">
         <label>Delivered Quantity Verified:</label>
-        <input type="number" id="riderDeliveryQty" class="form-input" value="${quantity}" min="1" required />
+        <input type="number" id="riderDeliveryQty" class="form-input" value="${quantity}" min="1" max="${quantity}" required />
       </div>
 
       <div class="form-field">
         <label>Proof of Delivery Evidence:</label>
         <div style="background:rgba(255,255,255,0.04);border:1px dashed var(--border-active);border-radius:var(--radius-sm);padding:1rem;text-align:center">
           <span style="font-size:1.8rem">📷</span>
-          <p style="font-size:0.8rem;color:var(--text-secondary);margin-top:0.3rem">Proof Captured: delivery-proof-mglr.jpg</p>
+          <p style="font-size:0.8rem;color:var(--text-secondary);margin-top:0.3rem">Choose an actual JPG or PNG delivery photo.</p>
           <input type="file" id="riderProofPhoto" accept="image/jpeg,image/png" required />
         </div>
       </div>
@@ -288,26 +266,8 @@ async function submitRiderDelivery(e, donationId) {
     });
 
     const data = await res.json();
-    if (data.result !== "OK") {
-      throw new Error(`Delivery Verification Failed: ${data.result}`);
-    }
-
-    function renderAvailabilityButton(isAvailable) {
-      const button = document.getElementById("btnDeliveryAvailability");
-      if (button) button.textContent = isAvailable ? "Available · Set off duty" : "Off duty · Go available";
-    }
-
-    function readPhotoData(file) {
-      return new Promise((resolve, reject) => {
-        if (!file || file.size > 5 * 1024 * 1024 || !["image/jpeg", "image/png"].includes(file.type)) {
-          reject(new Error("Choose a JPG or PNG delivery photo no larger than 5 MB."));
-          return;
-        }
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = () => reject(new Error("Unable to read the selected photo."));
-        reader.readAsDataURL(file);
-      });
+    if (!res.ok || data.result !== "OK" || data.donationStatus !== "DELIVERED") {
+      throw new Error(data.error || `Delivery verification failed: ${data.result || res.status}`);
     }
 
     closeDeliveryModal();
@@ -316,6 +276,26 @@ async function submitRiderDelivery(e, donationId) {
   } catch (err) {
     showToast(err.message, "error");
   }
+}
+
+function renderAvailabilityButton(isAvailable) {
+  const button = document.getElementById("btnDeliveryAvailability");
+  if (button) button.textContent = isAvailable ? "Available · Set off duty" : "Off duty · Go available";
+  const availability = document.getElementById("riderAvailability");
+  if (availability) availability.textContent = isAvailable ? "Available" : "Off duty";
+}
+
+function readPhotoData(file) {
+  return new Promise((resolve, reject) => {
+    if (!file || file.size > 5 * 1024 * 1024 || !["image/jpeg", "image/png"].includes(file.type)) {
+      reject(new Error("Choose a JPG or PNG delivery photo no larger than 5 MB."));
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(new Error("Unable to read the selected photo."));
+    reader.readAsDataURL(file);
+  });
 }
 
 function openDeliveryModal(title, html) {
@@ -337,7 +317,8 @@ function showToast(message, type = "info") {
 
   const toast = document.createElement("div");
   toast.className = `toast toast-${type}`;
-  toast.textContent = `${type === "success" ? "✅" : "⚠️"} ${message}`;
+  const translatedMessage = window.foodBridgeTranslate?.(message) || message;
+  toast.textContent = `${type === "success" ? "✅" : "⚠️"} ${translatedMessage}`;
   container.appendChild(toast);
 
   setTimeout(() => {

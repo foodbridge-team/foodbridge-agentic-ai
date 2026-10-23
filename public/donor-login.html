@@ -7,7 +7,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="login.css" />
+  <script src="header.js"></script>
 </head>
 <body class="theme-donor">
   <div class="login-wrapper">
@@ -44,17 +46,17 @@
         </div>
       </div>
 
-      <div class="info-footer">
-        🔒 Secured by SHA-256 Tamper-Evident Ledger
-      </div>
     </div>
 
     <!-- Right Login & Registration Form Panel -->
     <div class="form-panel">
+      <button class="control-btn auth-language-toggle" data-language-toggle aria-label="Switch language to Kannada" title="Switch language to Kannada">
+        <span class="btn-icon">🌐</span><span data-language-label>ಕನ್ನಡ</span>
+      </button>
       <!-- Auth Mode Switcher -->
       <div class="auth-mode-tabs">
-        <button type="button" class="auth-tab active" id="tabSignIn">Sign In</button>
-        <button type="button" class="auth-tab" id="tabRegister">New Donor Registration</button>
+        <a href="/donor-login" class="auth-tab" id="tabSignIn">Sign In</a>
+        <a href="/donor-signup" class="auth-tab" id="tabRegister">Create Donor Account</a>
       </div>
 
       <!-- Messages -->
@@ -130,7 +132,7 @@
 
           <div class="input-group">
             <label class="input-label" for="regPassword">Create Password</label>
-            <input type="password" id="regPassword" class="input-box" placeholder="Min. 8 characters" required />
+            <input type="password" id="regPassword" class="input-box" placeholder="At least 10 characters" minlength="10" maxlength="128" required />
           </div>
 
           <div style="background:var(--bg-cream);padding:0.75rem;border-radius:8px;border:1px solid var(--border-subtle);font-size:0.78rem;color:var(--text-muted)">
@@ -144,12 +146,15 @@
       </div>
 
       <div class="switch-portal">
-        <span>Are you an NGO? <a href="ngo-login.html">Sign in here</a></span>
+        <span>Are you an NGO? <a href="/ngo-login">Sign in</a> · <a href="/ngo-signup">Sign up</a></span>
       </div>
     </div>
   </div>
 
   <script src="api.js"></script>
+  <script src="i18n.js"></script>
+  <script src="footer.js"></script>
+  <script src="interactions.js"></script>
   <script src="login.js"></script>
 </body>
 </html>

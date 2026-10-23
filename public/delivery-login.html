@@ -7,7 +7,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="login.css" />
+  <script src="header.js"></script>
 </head>
 <body class="theme-delivery">
   <div class="login-wrapper">
@@ -25,36 +27,36 @@
 
       <div class="info-content">
         <span class="role-badge">🚴 Delivery & Volunteer Fleet</span>
-        <h2>Deliver Hope Across The City, One Meal At A Time</h2>
-        <p>Accept nearby food rescue requests, navigate directly from donor kitchens to shelters, and verify deliveries using automated two-stage OTP and camera proof.</p>
+        <h2>Volunteer Rider Portal</h2>
+        <p>Pick up. Deliver. Make a difference.</p>
 
-        <div class="features-list">
+        <div class="features-list delivery-login-highlights">
           <div class="feature-item">
-            <span class="feature-check">✓</span>
-            <span>Availability status toggle (Online / Off Duty)</span>
+            <span class="delivery-feature-icon" aria-hidden="true">📍</span>
+            <span>View your assigned pickups</span>
           </div>
           <div class="feature-item">
-            <span class="feature-check">✓</span>
-            <span>Turn-by-turn navigation & route matching</span>
+            <span class="delivery-feature-icon" aria-hidden="true">🤝</span>
+            <span>Confirm secure handovers</span>
           </div>
           <div class="feature-item">
-            <span class="feature-check">✓</span>
-            <span>Two-stage cryptographic OTP verification on mobile</span>
+            <span class="delivery-feature-icon" aria-hidden="true">🍲</span>
+            <span>Track meals delivered</span>
           </div>
         </div>
       </div>
 
-      <div class="info-footer">
-        ⚡ Community Heroes Network • Real Impact Tracked on Chain
-      </div>
     </div>
 
     <!-- Right Login & Registration Form Panel -->
     <div class="form-panel">
+      <button class="control-btn auth-language-toggle" data-language-toggle aria-label="Switch language to Kannada" title="Switch language to Kannada">
+        <span class="btn-icon">🌐</span><span data-language-label>ಕನ್ನಡ</span>
+      </button>
       <!-- Auth Mode Switcher -->
       <div class="auth-mode-tabs">
-        <button type="button" class="auth-tab active" id="tabSignIn">Sign In</button>
-        <button type="button" class="auth-tab" id="tabRegister">New Rider Sign Up</button>
+        <a href="/delivery-login" class="auth-tab" id="tabSignIn">Sign In</a>
+        <a href="/delivery-signup" class="auth-tab" id="tabRegister">Create Delivery Account</a>
       </div>
 
       <!-- Messages -->
@@ -137,7 +139,7 @@
 
           <div class="input-group">
             <label class="input-label" for="regPassword">Create Password</label>
-            <input type="password" id="regPassword" class="input-box" placeholder="Min. 8 characters" required />
+            <input type="password" id="regPassword" class="input-box" placeholder="At least 10 characters" minlength="10" maxlength="128" required />
           </div>
 
           <button type="submit" id="btnSubmitRegister" class="btn-submit">
@@ -147,12 +149,15 @@
       </div>
 
       <div class="switch-portal">
-        <span>Are you a food donor? <a href="donor-login.html">Sign in here</a></span>
+        <span>Are you a food donor? <a href="/donor-login">Sign in</a> · <a href="/donor-signup">Sign up</a></span>
       </div>
     </div>
   </div>
 
   <script src="api.js"></script>
+  <script src="i18n.js"></script>
+  <script src="footer.js"></script>
+  <script src="interactions.js"></script>
   <script src="login.js"></script>
 </body>
 </html>

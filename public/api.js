@@ -42,24 +42,34 @@
   };
 
   window.loadFoodBridgeNotifications = async () => {
-    const container = document.getElementById("accountNotifications");
-    if (!container) return;
     try {
       const response = await fetch("/api/notifications");
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Unable to load notifications.");
       const notifications = data.notifications || [];
-      container.innerHTML = notifications.length
-        ? `<h2>Updates</h2>${notifications.slice(0, 4).map((item) => `
-            <article class="notification-item notification-${escapeHtml(item.type)}">
-              <strong>${escapeHtml(item.title)}</strong>
-              <p>${escapeHtml(item.message)}</p>
-              <time>${escapeHtml(new Date(item.timestamp).toLocaleString())}</time>
-            </article>
-          `).join("")}`
-        : `<h2>Updates</h2><p>No new activity notifications.</p>`;
+      const user = JSON.parse(localStorage.getItem("foodbridge_user") || "null");
+      if (!user?.id || !notifications.length) return;
+
+      const storageKey = `foodbridge_seen_notifications_${user.id}`;
+      let seenIds = [];
+      try {
+        seenIds = JSON.parse(localStorage.getItem(storageKey) || "[]");
+      } catch {
+        seenIds = [];
+      }
+      if (!Array.isArray(seenIds)) seenIds = [];
+      const seen = new Set(seenIds);
+      const unseen = notifications.filter((item) => !seen.has(item.id));
+      const recentUnseen = unseen.filter((item) => Date.now() - Date.parse(item.timestamp) < 15 * 60 * 1000);
+      recentUnseen.slice(0, 3).forEach((item) => {
+        window.showToast(`${item.title}: ${item.message}`, item.type);
+      });
+      localStorage.setItem(
+        storageKey,
+        JSON.stringify([...new Set([...seenIds, ...notifications.map((item) => item.id)])].slice(-100))
+      );
     } catch (error) {
-      container.textContent = error.message;
+      console.error("Notification fetch failed:", error);
     }
   };
 })();

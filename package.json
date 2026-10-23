@@ -5,7 +5,8 @@
   "private": true,
   "description": "Secure AI surplus food redistribution engine with two-stage cryptographic OTP verification and SHA-256 audit ledger",
   "scripts": {
-    "start": "node run.ts",
+    "dev": "node --watch --env-file-if-exists=.env web.ts",
+    "start": "node --env-file-if-exists=.env web.ts",
     "demo": "node run.ts",
     "web": "node --env-file-if-exists=.env web.ts",
     "test": "node --test tests/*.test.ts"

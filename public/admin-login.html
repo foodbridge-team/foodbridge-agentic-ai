@@ -7,7 +7,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="login.css" />
+  <script src="header.js"></script>
 </head>
 <body class="theme-admin">
   <div class="login-wrapper">
@@ -44,13 +46,13 @@
         </div>
       </div>
 
-      <div class="info-footer">
-        ⚠️ Unauthorized access attempts are monitored and recorded.
-      </div>
     </div>
 
     <!-- Right Login Form Panel -->
     <div class="form-panel">
+      <button class="control-btn auth-language-toggle" data-language-toggle aria-label="Switch language to Kannada" title="Switch language to Kannada">
+        <span class="btn-icon">🌐</span><span data-language-label>ಕನ್ನಡ</span>
+      </button>
       <div class="form-header">
         <h1>Administrator Sign In</h1>
         <p class="form-subtitle">Public registration for Administrator is prohibited</p>
@@ -58,6 +60,17 @@
 
       <!-- Messages -->
       <div id="loginErrorBox" style="display:none;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#b91c1c;padding:0.75rem;border-radius:8px;font-size:0.84rem;font-weight:600"></div>
+
+      <!-- Quick 1-Click Demo -->
+      <div class="demo-banner">
+        <div class="demo-header">
+          <span>⚡ Instant Demo Account</span>
+          <span class="demo-badge">1-Click Access</span>
+        </div>
+        <button type="button" id="btnDemoLogin" class="btn-demo-login">
+          <span>🛡️ Sign In as Dr. Arvind Rao (Admin)</span>
+        </button>
+      </div>
 
       <div class="divider">or enter admin credentials</div>
 
@@ -86,6 +99,9 @@
   </div>
 
   <script src="api.js"></script>
+  <script src="i18n.js"></script>
+  <script src="footer.js"></script>
+  <script src="interactions.js"></script>
   <script src="login.js"></script>
 </body>
 </html>
