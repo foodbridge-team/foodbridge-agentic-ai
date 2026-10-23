@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NGO Shelter Hub — FoodBridge AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="ngo.css" />
+</head>
+<body class="theme-ngo-portal">
+  <div class="ambient-glow glow-ngo-1"></div>
+  <div class="ambient-glow glow-ngo-2"></div>
+
+  <div class="portal-wrapper">
+    <!-- Top Bar -->
+    <header class="portal-header">
+      <div class="header-left">
+        <a href="index.html" class="brand-link">
+          <div class="brand-badge-icon ngo-badge-icon">🏢</div>
+          <div>
+            <div class="portal-brand-title">FoodBridge <span class="text-violet">AI</span></div>
+            <div class="portal-brand-sub">NGO & Community Shelter Console</div>
+          </div>
+        </a>
+      </div>
+
+      <div class="header-right">
+        <div class="user-chip ngo-user-chip">
+          <span class="user-avatar" id="ngoAvatar">👩‍⚕️</span>
+          <div class="user-details">
+            <span class="user-name" id="ngoName">Seva Trust Care Foundation</span>
+            <span class="user-role-badge text-violet">Verified Relief Partner</span>
+          </div>
+        </div>
+
+        <button id="btnNgoLogout" class="btn btn-sm btn-outline" title="Log Out">
+          <span>Sign Out ➔</span>
+        </button>
+      </div>
+    </header>
+
+    <section id="accountNotifications" class="notifications-panel" aria-live="polite"></section>
+
+    <!-- Stats Ticker -->
+    <section class="ngo-stats-banner">
+      <div class="stat-card">
+        <div class="stat-icon">📥</div>
+        <div class="stat-content">
+          <span class="stat-number" id="ngoTotalReceived">0</span>
+          <span class="stat-label">Meals Received</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon">📦</div>
+        <div class="stat-content">
+          <span class="stat-number text-violet" id="ngoCapacity">—</span>
+          <span class="stat-label">Free Storage Capacity</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon">🚴</div>
+        <div class="stat-content">
+          <span class="stat-number text-cyan" id="ngoInboundCount">0</span>
+          <span class="stat-label">Inbound Volunteer Couriers</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon">🛡️</div>
+        <div class="stat-content">
+          <span class="stat-number text-emerald" id="ngoVerification">—</span>
+          <span class="stat-label">FSSAI / Health Checked</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Main NGO Workspace -->
+    <main class="ngo-workspace">
+      <!-- Left: Available Surplus Listings to Claim -->
+      <section class="glass-card">
+        <div class="card-title-bar">
+          <div class="card-icon-badge">🍲</div>
+          <div>
+            <h3>Available Surplus Food Nearby</h3>
+            <p class="card-caption">Deterministic feasibility filtering + AI proximity ranking</p>
+          </div>
+        </div>
+
+        <div id="ngoSurplusFeed" class="cards-stream">
+          <!-- Rendered via JS -->
+        </div>
+      </section>
+
+      <!-- Right: Inbound Deliveries & Handover -->
+      <section class="glass-card">
+        <div class="card-title-bar">
+          <div class="card-icon-badge">🤝</div>
+          <div>
+            <h3>Claimed Inbound Deliveries & Verification</h3>
+            <p class="card-caption">Generate delivery OTP once food arrives & verify package count</p>
+          </div>
+        </div>
+
+        <div id="ngoInboundFeed" class="cards-stream">
+          <!-- Rendered via JS -->
+        </div>
+      </section>
+    </main>
+
+    <!-- Global OTP Modal -->
+    <div id="ngoModal" class="app-modal">
+      <div class="modal-backdrop" onclick="closeNgoModal()"></div>
+      <div class="modal-dialog">
+        <div class="modal-header">
+          <div class="modal-title-wrap">
+            <span class="modal-icon">🔑</span>
+            <h3>Delivery Handover OTP</h3>
+          </div>
+          <button class="modal-close" onclick="closeNgoModal()">&times;</button>
+        </div>
+        <div class="modal-body" id="ngoModalBody">
+          <!-- Dynamic -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Notification Toast Container -->
+    <div id="toastContainer" class="toast-container"></div>
+  </div>
+
+  <script src="api.js"></script>
+  <script src="ngo.js"></script>
+</body>
+</html>

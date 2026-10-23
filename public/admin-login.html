@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Administrator Login — FoodBridge AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="login.css" />
+</head>
+<body class="theme-admin">
+  <div class="login-wrapper">
+    <!-- Left Info Panel -->
+    <div class="info-panel">
+      <div>
+        <a href="index.html" class="brand-header">
+          <div class="brand-icon">🛡️</div>
+          <div>
+            <div class="brand-title">FoodBridge <span style="color:#1b4332">AI</span></div>
+            <div style="font-size:0.75rem;color:#526071">Governance &amp; Security Administration</div>
+          </div>
+        </a>
+      </div>
+
+      <div class="info-content">
+        <span class="role-badge">🔒 Restricted Admin Console</span>
+        <h2>Integrity &amp; Partner Verification Portal</h2>
+        <p>Review and verify incoming registration documents from NGOs and food donors. Ensure strict FSSAI compliance, audit hash chains, and maintain platform security.</p>
+
+        <div class="features-list">
+          <div class="feature-item">
+            <span class="feature-check">✓</span>
+            <span>Review 80G and NGO license documents</span>
+          </div>
+          <div class="feature-item">
+            <span class="feature-check">✓</span>
+            <span>Enforce food safety verification gates</span>
+          </div>
+          <div class="feature-item">
+            <span class="feature-check">✓</span>
+            <span>Tamper-evident SHA-256 audit ledger inspection</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="info-footer">
+        ⚠️ Unauthorized access attempts are monitored and recorded.
+      </div>
+    </div>
+
+    <!-- Right Login Form Panel -->
+    <div class="form-panel">
+      <div class="form-header">
+        <h1>Administrator Sign In</h1>
+        <p class="form-subtitle">Public registration for Administrator is prohibited</p>
+      </div>
+
+      <!-- Messages -->
+      <div id="loginErrorBox" style="display:none;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#b91c1c;padding:0.75rem;border-radius:8px;font-size:0.84rem;font-weight:600"></div>
+
+      <div class="divider">or enter admin credentials</div>
+
+      <form id="loginForm" class="login-form">
+        <input type="hidden" id="roleIdentifier" value="ADMIN" />
+
+        <div class="input-group">
+          <label class="input-label" for="emailInput">Administrator Email</label>
+          <input type="email" id="emailInput" class="input-box" placeholder="Administrator email" required />
+        </div>
+
+        <div class="input-group">
+          <label class="input-label" for="passwordInput">Admin Master Key / Password</label>
+          <input type="password" id="passwordInput" class="input-box" placeholder="Administrator password" required />
+        </div>
+
+        <button type="submit" id="btnSubmitLogin" class="btn-submit">
+          Access Admin Verification Console ➔
+        </button>
+      </form>
+
+      <div class="switch-portal">
+        <a href="index.html">← Return to Public Homepage</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="api.js"></script>
+  <script src="login.js"></script>
+</body>
+</html>

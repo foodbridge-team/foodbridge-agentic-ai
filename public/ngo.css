@@ -1,0 +1,98 @@
+/* ==========================================================================
+   FoodBridge AI — Dedicated NGO Portal Stylesheet
+   Theme: Royal Violet & Neon Orchid
+   ========================================================================== */
+
+.theme-ngo-portal {
+  background-color: #080612;
+  color: #f8fafc;
+}
+
+.text-violet {
+  color: #a78bfa;
+}
+
+.glow-ngo-1 {
+  width: 550px;
+  height: 550px;
+  background: #8b5cf6;
+  top: -120px;
+  left: -100px;
+}
+
+.glow-ngo-2 {
+  width: 450px;
+  height: 450px;
+  background: #3b82f6;
+  bottom: 0;
+  right: -100px;
+}
+
+.ngo-badge-icon {
+  background: rgba(139, 92, 246, 0.15) !important;
+  border-color: rgba(139, 92, 246, 0.35) !important;
+  box-shadow: 0 0 15px rgba(139, 92, 246, 0.25) !important;
+}
+
+.ngo-user-chip {
+  border-color: rgba(139, 92, 246, 0.25) !important;
+}
+
+/* Stats Banner */
+.ngo-stats-banner {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+}
+
+@media (max-width: 900px) {
+  .ngo-stats-banner {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.ngo-workspace {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+@media (max-width: 1024px) {
+  .ngo-workspace {
+    grid-template-columns: 1fr;
+  }
+}
+
+.btn-claim {
+  background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+  color: #fff;
+  font-weight: 700;
+  padding: 0.55rem 1rem;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(139, 92, 246, 0.35);
+  transition: all 0.2s ease;
+}
+
+.btn-claim:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(139, 92, 246, 0.5);
+}
+
+.btn-issue-delivery-otp {
+  background: linear-gradient(135deg, #06b6d4, #0284c7);
+  color: #fff;
+  font-weight: 700;
+  padding: 0.55rem 1rem;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(6, 182, 212, 0.35);
+  transition: all 0.2s ease;
+}
+
+.btn-issue-delivery-otp:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(6, 182, 212, 0.5);
+}

@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Verification & Audit Console — FoodBridge AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="admin.css" />
+</head>
+<body class="theme-admin-portal">
+  <div class="portal-wrapper">
+    <!-- Top Header -->
+    <header class="portal-header">
+      <div class="header-left">
+        <a href="index.html" class="brand-link">
+          <div class="brand-badge-icon admin-badge-icon">🛡️</div>
+          <div>
+            <div class="portal-brand-title">FoodBridge <span class="text-forest">AI</span></div>
+            <div class="portal-brand-sub">Platform Administration &amp; Partner Verification</div>
+          </div>
+        </a>
+      </div>
+
+      <div class="header-right">
+        <div class="user-chip">
+          <span class="user-avatar">👨‍⚖️</span>
+          <div class="user-details">
+            <span class="user-name">Dr. Arvind Rao</span>
+            <span class="user-role-badge" style="color:var(--forest-800)">Administrator (Root)</span>
+          </div>
+        </div>
+
+        <button id="btnAdminLogout" class="btn btn-sm btn-outline" title="Log Out">
+          <span>Sign Out ➔</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Admin Metric Cards -->
+    <section class="admin-stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon" style="background:var(--orange-light);color:var(--orange-600)">⏳</div>
+        <div class="stat-content">
+          <span class="stat-number text-orange" id="kpiPendingCount">2</span>
+          <span class="stat-label">Pending Verification Queue</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon" style="background:var(--fresh-green-light);color:var(--forest-800)">🏪</div>
+        <div class="stat-content">
+          <span class="stat-number text-forest" id="kpiApprovedDonors">1</span>
+          <span class="stat-label">Verified Donors</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon" style="background:rgba(45,106,79,0.1);color:var(--forest-800)">🏢</div>
+        <div class="stat-content">
+          <span class="stat-number" id="kpiVerifiedNgos">1</span>
+          <span class="stat-label">Verified Shelters</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon" style="background:rgba(16,185,129,0.1);color:var(--fresh-green)">⛓️</div>
+        <div class="stat-content">
+          <span class="stat-number text-emerald" id="kpiLedgerIntegrity">100% OK</span>
+          <span class="stat-label">SHA-256 Ledger Audit</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Main Workspace -->
+    <main class="admin-workspace">
+      <!-- Section 1: Verification Applications Queue -->
+      <section class="glass-card">
+        <div class="card-title-bar">
+          <div class="card-icon-badge">📋</div>
+          <div style="flex:1">
+            <h3>Partner Verification &amp; License Review Queue</h3>
+            <p class="card-caption">Review license documents and approve/reject donor and NGO registrations</p>
+          </div>
+          <button id="btnRefreshQueue" class="btn btn-sm btn-outline">🔄 Refresh Queue</button>
+        </div>
+
+        <div id="verificationQueueList" class="verification-queue-stream">
+          <!-- Rendered dynamically -->
+        </div>
+      </section>
+
+      <!-- Section 2: All Registered Users & Verification States -->
+      <section class="glass-card">
+        <div class="card-title-bar">
+          <div class="card-icon-badge">👥</div>
+          <div>
+            <h3>All Registered Platform Partners</h3>
+            <p class="card-caption">Complete directory of donors, shelters, and courier partners</p>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>User / Organization</th>
+                <th>Role</th>
+                <th>Contact</th>
+                <th>Status</th>
+                <th>Availability</th>
+                <th>License Document</th>
+              </tr>
+            </thead>
+            <tbody id="usersTableBody">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Section 3: SHA-256 Cryptographic Audit Ledger Explorer -->
+      <section class="glass-card">
+        <div class="card-title-bar">
+          <div class="card-icon-badge">🛡️</div>
+          <div style="flex:1">
+            <h3>Immutable SHA-256 Audit Trail</h3>
+            <p class="card-caption">Complete cryptographic history of partner approvals, food listings, and handovers</p>
+          </div>
+          <button id="btnReauditLedger" class="btn btn-sm btn-primary">Audit Hash Integrity</button>
+        </div>
+
+        <div id="adminLedgerStream" class="ledger-chain-view" style="max-height:350px">
+          <!-- Rendered via JS -->
+        </div>
+      </section>
+    </main>
+
+    <!-- Document Preview Modal -->
+    <div id="documentModal" class="app-modal">
+      <div class="modal-backdrop" onclick="closeDocModal()"></div>
+      <div class="modal-dialog" style="max-width:700px">
+        <div class="modal-header">
+          <div class="modal-title-wrap">
+            <span class="modal-icon">📄</span>
+            <h3 id="docModalTitle">Registration Document Preview</h3>
+          </div>
+          <button class="modal-close" onclick="closeDocModal()">&times;</button>
+        </div>
+        <div class="modal-body" id="docModalBody">
+          <!-- Document preview rendered here -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toastContainer" class="toast-container"></div>
+  </div>
+
+  <section id="accountNotifications" class="notifications-panel" aria-live="polite"></section>
+
+  <script src="api.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>

@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Delivery Dispatch Hub Login — FoodBridge AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="login.css" />
+</head>
+<body class="theme-delivery">
+  <div class="login-wrapper">
+    <!-- Left Info Panel -->
+    <div class="info-panel">
+      <div>
+        <a href="index.html" class="brand-header">
+          <div class="brand-icon">🌱</div>
+          <div>
+            <div class="brand-title">FoodBridge <span style="color:#ea580c">AI</span></div>
+            <div style="font-size:0.75rem;color:#526071">Good Food Deserves a Second Chance.</div>
+          </div>
+        </a>
+      </div>
+
+      <div class="info-content">
+        <span class="role-badge">🚴 Delivery & Volunteer Fleet</span>
+        <h2>Deliver Hope Across The City, One Meal At A Time</h2>
+        <p>Accept nearby food rescue requests, navigate directly from donor kitchens to shelters, and verify deliveries using automated two-stage OTP and camera proof.</p>
+
+        <div class="features-list">
+          <div class="feature-item">
+            <span class="feature-check">✓</span>
+            <span>Availability status toggle (Online / Off Duty)</span>
+          </div>
+          <div class="feature-item">
+            <span class="feature-check">✓</span>
+            <span>Turn-by-turn navigation & route matching</span>
+          </div>
+          <div class="feature-item">
+            <span class="feature-check">✓</span>
+            <span>Two-stage cryptographic OTP verification on mobile</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="info-footer">
+        ⚡ Community Heroes Network • Real Impact Tracked on Chain
+      </div>
+    </div>
+
+    <!-- Right Login & Registration Form Panel -->
+    <div class="form-panel">
+      <!-- Auth Mode Switcher -->
+      <div class="auth-mode-tabs">
+        <button type="button" class="auth-tab active" id="tabSignIn">Sign In</button>
+        <button type="button" class="auth-tab" id="tabRegister">New Rider Sign Up</button>
+      </div>
+
+      <!-- Messages -->
+      <div id="loginErrorBox" style="display:none;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#b91c1c;padding:0.75rem;border-radius:8px;font-size:0.84rem;font-weight:600"></div>
+      <div id="loginSuccessBox" style="display:none;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.35);color:#047857;padding:0.75rem;border-radius:8px;font-size:0.84rem;font-weight:600"></div>
+
+      <!-- SECTION 1: SIGN IN -->
+      <div id="signInSection" style="display:flex;flex-direction:column;gap:1.25rem">
+        <div class="form-header">
+          <h1>Volunteer Rider Sign In</h1>
+          <p class="form-subtitle">Accept food rescue deliveries and track missions</p>
+        </div>
+
+        <!-- Quick 1-Click Demo -->
+        <div class="demo-banner">
+          <div class="demo-header">
+            <span>🚀 Instant Demo Account</span>
+            <span class="demo-badge">1-Click Access</span>
+          </div>
+          <button type="button" id="btnDemoLogin" class="btn-demo-login">
+            <span>🚴 Sign In as Rahul Kumar (Verified Courier)</span>
+          </button>
+        </div>
+
+        <div class="divider">or continue with email</div>
+
+        <form id="loginForm" class="login-form">
+          <input type="hidden" id="roleIdentifier" value="VOLUNTEER" />
+
+          <div class="input-group">
+            <label class="input-label" for="emailInput">Rider Email</label>
+            <input type="email" id="emailInput" class="input-box" placeholder="rider@foodbridge.org" value="rider@foodbridge.org" required />
+          </div>
+
+          <div class="input-group">
+            <label class="input-label" for="passwordInput">Password</label>
+            <input type="password" id="passwordInput" class="input-box" placeholder="Password" required />
+          </div>
+
+          <button type="submit" id="btnSubmitLogin" class="btn-submit">
+            Sign In to Delivery Portal ➔
+          </button>
+        </form>
+      </div>
+
+      <!-- SECTION 2: VOLUNTEER REGISTRATION -->
+      <div id="registerSection" style="display:none;flex-direction:column;gap:1.25rem">
+        <div class="form-header">
+          <h1>Join as Delivery Volunteer</h1>
+          <p class="form-subtitle">Accounts are verified to ensure safe food handling</p>
+        </div>
+
+        <form id="registerForm" class="login-form">
+          <div class="input-group">
+            <label class="input-label" for="regName">Full Legal Name</label>
+            <input type="text" id="regName" class="input-box" placeholder="e.g. Sunil Shetty" required />
+          </div>
+
+          <div class="form-row">
+            <div class="input-group">
+              <label class="input-label" for="regEmail">Email Address</label>
+              <input type="email" id="regEmail" class="input-box" placeholder="sunil@gmail.com" required />
+            </div>
+
+            <div class="input-group">
+              <label class="input-label" for="regPhone">Phone Number</label>
+              <input type="tel" id="regPhone" class="input-box" placeholder="+91 98450 77112" required />
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label class="input-label" for="regVehicle">Primary Vehicle Type</label>
+            <select id="regVehicle" class="input-box">
+              <option value="Electric Scooter">🛵 Electric Scooter / Bike</option>
+              <option value="Bicycle">🚲 Eco-Bicycle (Short radius)</option>
+              <option value="Motorcycle">🏍️ Motorcycle</option>
+              <option value="Car / Van">🚗 Car / Four-Wheeler (Bulk catering)</option>
+            </select>
+          </div>
+
+          <div class="input-group">
+            <label class="input-label" for="regPassword">Create Password</label>
+            <input type="password" id="regPassword" class="input-box" placeholder="Min. 8 characters" required />
+          </div>
+
+          <button type="submit" id="btnSubmitRegister" class="btn-submit">
+            Sign Up as Volunteer Rider ➔
+          </button>
+        </form>
+      </div>
+
+      <div class="switch-portal">
+        <span>Are you a food donor? <a href="donor-login.html">Sign in here</a></span>
+      </div>
+    </div>
+  </div>
+
+  <script src="api.js"></script>
+  <script src="login.js"></script>
+</body>
+</html>

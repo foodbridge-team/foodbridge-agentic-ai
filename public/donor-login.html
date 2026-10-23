@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Food Donor Portal — FoodBridge AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="login.css" />
+</head>
+<body class="theme-donor">
+  <div class="login-wrapper">
+    <!-- Left Info Panel -->
+    <div class="info-panel">
+      <div>
+        <a href="index.html" class="brand-header">
+          <div class="brand-icon">🌱</div>
+          <div>
+            <div class="brand-title">FoodBridge <span style="color:#1b4332">AI</span></div>
+            <div style="font-size:0.75rem;color:#526071">Good Food Deserves a Second Chance.</div>
+          </div>
+        </a>
+      </div>
+
+      <div class="info-content">
+        <span class="role-badge">🏪 Food Donor Gateway</span>
+        <h2>Turn Excess Food Into Community Relief</h2>
+        <p>List banquet meals, bakery surplus, and groceries in seconds. Our deterministic AI pairs your food with verified nearby shelters and dispatches volunteer collectors.</p>
+
+        <div class="features-list">
+          <div class="feature-item">
+            <span class="feature-check">✓</span>
+            <span>Admin-verified donor safety credentials</span>
+          </div>
+          <div class="feature-item">
+            <span class="feature-check">✓</span>
+            <span>Cryptographic 6-digit OTP security on pickup</span>
+          </div>
+          <div class="feature-item">
+            <span class="feature-check">✓</span>
+            <span>Confirmed donation activity history</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="info-footer">
+        🔒 Secured by SHA-256 Tamper-Evident Ledger
+      </div>
+    </div>
+
+    <!-- Right Login & Registration Form Panel -->
+    <div class="form-panel">
+      <!-- Auth Mode Switcher -->
+      <div class="auth-mode-tabs">
+        <button type="button" class="auth-tab active" id="tabSignIn">Sign In</button>
+        <button type="button" class="auth-tab" id="tabRegister">New Donor Registration</button>
+      </div>
+
+      <!-- Messages -->
+      <div id="loginErrorBox" style="display:none;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#b91c1c;padding:0.75rem;border-radius:8px;font-size:0.84rem;font-weight:600"></div>
+      <div id="loginSuccessBox" style="display:none;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.35);color:#047857;padding:0.75rem;border-radius:8px;font-size:0.84rem;font-weight:600"></div>
+
+      <!-- SECTION 1: SIGN IN -->
+      <div id="signInSection" style="display:flex;flex-direction:column;gap:1.25rem">
+        <div class="form-header">
+          <h1>Donor Sign In</h1>
+          <p class="form-subtitle">Access your restaurant or catering dashboard</p>
+        </div>
+
+        <!-- Quick 1-Click Demo -->
+        <div class="demo-banner">
+          <div class="demo-header">
+            <span>🚀 Instant Demo Account</span>
+            <span class="demo-badge">1-Click Access</span>
+          </div>
+          <button type="button" id="btnDemoLogin" class="btn-demo-login">
+            <span>👨‍🍳 Sign In as Ocean Pearl Banquets (Verified)</span>
+          </button>
+        </div>
+
+        <div class="divider">or continue with email</div>
+
+        <form id="loginForm" class="login-form">
+          <input type="hidden" id="roleIdentifier" value="DONOR" />
+
+          <div class="input-group">
+            <label class="input-label" for="emailInput">Business Email</label>
+            <input type="email" id="emailInput" class="input-box" placeholder="donor@oceanpearl.com" value="donor@oceanpearl.com" required />
+          </div>
+
+          <div class="input-group">
+            <label class="input-label" for="passwordInput">Password</label>
+            <input type="password" id="passwordInput" class="input-box" placeholder="Password" required />
+          </div>
+
+          <button type="submit" id="btnSubmitLogin" class="btn-submit">
+            Sign In to Donor Portal ➔
+          </button>
+        </form>
+      </div>
+
+      <!-- SECTION 2: REGISTRATION -->
+      <div id="registerSection" style="display:none;flex-direction:column;gap:1.25rem">
+        <div class="form-header">
+          <h1>Register as Food Donor</h1>
+          <p class="form-subtitle">Admin verification is required before publishing food</p>
+        </div>
+
+        <form id="registerForm" class="login-form">
+          <div class="input-group">
+            <label class="input-label" for="regOrg">Restaurant / Business Name</label>
+            <input type="text" id="regOrg" class="input-box" placeholder="e.g. Coastal Spice Grand Banquets" required />
+          </div>
+
+          <div class="input-group">
+            <label class="input-label" for="regName">Contact Person Name</label>
+            <input type="text" id="regName" class="input-box" placeholder="e.g. Ramesh Hegde" required />
+          </div>
+
+          <div class="input-group">
+            <label class="input-label" for="regEmail">Email Address</label>
+            <input type="email" id="regEmail" class="input-box" placeholder="ramesh@coastalspice.com" required />
+          </div>
+
+          <div class="input-group">
+            <label class="input-label" for="regPhone">Contact Phone Number</label>
+            <input type="tel" id="regPhone" class="input-box" placeholder="+91 98450 11223" required />
+          </div>
+
+          <div class="input-group">
+            <label class="input-label" for="regPassword">Create Password</label>
+            <input type="password" id="regPassword" class="input-box" placeholder="Min. 8 characters" required />
+          </div>
+
+          <div style="background:var(--bg-cream);padding:0.75rem;border-radius:8px;border:1px solid var(--border-subtle);font-size:0.78rem;color:var(--text-muted)">
+            ℹ️ <strong>Admin Review Notice:</strong> To maintain strict food safety standards, newly registered donor accounts require verification by an administrator before publishing food donations.
+          </div>
+
+          <button type="submit" id="btnSubmitRegister" class="btn-submit">
+            Submit Application for Verification ➔
+          </button>
+        </form>
+      </div>
+
+      <div class="switch-portal">
+        <span>Are you an NGO? <a href="ngo-login.html">Sign in here</a></span>
+      </div>
+    </div>
+  </div>
+
+  <script src="api.js"></script>
+  <script src="login.js"></script>
+</body>
+</html>

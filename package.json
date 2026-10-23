@@ -1,0 +1,16 @@
+{
+  "name": "foodbridge-ai",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "description": "Secure AI surplus food redistribution engine with two-stage cryptographic OTP verification and SHA-256 audit ledger",
+  "scripts": {
+    "start": "node run.ts",
+    "demo": "node run.ts",
+    "web": "node --env-file-if-exists=.env web.ts",
+    "test": "node --test tests/*.test.ts"
+  },
+  "engines": {
+    "node": ">=22.18"
+  }
+}

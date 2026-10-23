@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Delivery Dispatch & Courier Hub — FoodBridge AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="delivery.css" />
+</head>
+<body class="theme-delivery-portal">
+  <div class="ambient-glow glow-delivery-1"></div>
+  <div class="ambient-glow glow-delivery-2"></div>
+
+  <div class="portal-wrapper">
+    <!-- Top Bar -->
+    <header class="portal-header">
+      <div class="header-left">
+        <a href="index.html" class="brand-link">
+          <div class="brand-badge-icon delivery-badge-icon">🚴</div>
+          <div>
+            <div class="portal-brand-title">FoodBridge <span class="text-cyan">AI</span></div>
+            <div class="portal-brand-sub">Volunteer Rider Dispatch Network</div>
+          </div>
+        </a>
+      </div>
+
+      <div class="header-right">
+        <div class="user-chip delivery-user-chip">
+          <span class="user-avatar" id="riderAvatar">🚴</span>
+          <div class="user-details">
+            <span class="user-name" id="riderName">Rahul Kumar</span>
+            <span class="user-role-badge text-cyan">Active On-Duty Courier</span>
+          </div>
+        </div>
+
+        <button id="btnDeliveryAvailability" class="btn btn-sm btn-outline">Set availability</button>
+        <button id="btnRiderLogout" class="btn btn-sm btn-outline" title="Log Out">
+          <span>Sign Out ➔</span>
+        </button>
+      </div>
+    </header>
+
+    <section id="accountNotifications" class="notifications-panel" aria-live="polite"></section>
+
+    <!-- Stats Ticker -->
+    <section class="delivery-stats-banner">
+      <div class="stat-card">
+        <div class="stat-icon">🏁</div>
+        <div class="stat-content">
+          <span class="stat-number" id="riderCompletedMissions">0</span>
+          <span class="stat-label">Completed Deliveries</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon">🗺️</div>
+        <div class="stat-content">
+          <span class="stat-number text-cyan">—</span>
+          <span class="stat-label">Distance tracked</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon">🍲</div>
+        <div class="stat-content">
+          <span class="stat-number text-emerald" id="riderMealsDelivered">0</span>
+          <span class="stat-label">Food Handed to Shelters</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon">⭐</div>
+        <div class="stat-content">
+          <span class="stat-number text-amber">—</span>
+          <span class="stat-label">Community rating</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Main Workspace -->
+    <main class="delivery-workspace">
+      <!-- Left: Open Rescue Missions -->
+      <section class="glass-card">
+        <div class="card-title-bar">
+          <div class="card-icon-badge">🛵</div>
+          <div>
+            <h3>Available Rescue Requests in Your City</h3>
+            <p class="card-caption">Select and accept nearby pickup missions</p>
+          </div>
+        </div>
+
+        <div id="deliveryAvailableFeed" class="cards-stream">
+          <!-- Rendered via JS -->
+        </div>
+      </section>
+
+      <!-- Right: Active Handover Mission Console -->
+      <section class="glass-card">
+        <div class="card-title-bar">
+          <div class="card-icon-badge">⚡</div>
+          <div>
+            <h3>Active Mission Handover Console</h3>
+            <p class="card-caption">Step-by-step OTP verification & photo evidence</p>
+          </div>
+        </div>
+
+        <div id="deliveryActiveConsole" class="active-mission-box">
+          <!-- Rendered dynamically -->
+        </div>
+      </section>
+    </main>
+
+    <!-- Global Delivery Modal -->
+    <div id="deliveryModal" class="app-modal">
+      <div class="modal-backdrop" onclick="closeDeliveryModal()"></div>
+      <div class="modal-dialog">
+        <div class="modal-header">
+          <div class="modal-title-wrap">
+            <span class="modal-icon" id="delModalIcon">🔑</span>
+            <h3 id="delModalTitle">Verification Action</h3>
+          </div>
+          <button class="modal-close" onclick="closeDeliveryModal()">&times;</button>
+        </div>
+        <div class="modal-body" id="deliveryModalBody">
+          <!-- Dynamic -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Notification Toast Container -->
+    <div id="toastContainer" class="toast-container"></div>
+  </div>
+
+  <script src="api.js"></script>
+  <script src="delivery.js"></script>
+</body>
+</html>

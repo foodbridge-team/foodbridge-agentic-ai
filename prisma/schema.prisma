@@ -1,0 +1,194 @@
+// FoodBridge AI — Database Schema
+// Datasource and generators
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User role definitions
+enum Role {
+  DONOR
+  NGO
+  VOLUNTEER
+  ADMIN
+}
+
+// Verification state for Donors, NGOs, and Volunteers
+enum VerifStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+// Complete donation lifecycle states
+enum DonationStatus {
+  LISTED
+  RESERVED
+  ASSIGNED
+  PICKED_UP
+  DELIVERED
+  AT_RISK
+  CANCELLED
+  EXPIRED
+}
+
+// Handover transport type
+enum HandoverType {
+  VOLUNTEER
+  NGO_SELF_PICKUP
+}
+
+// User accounts (Donors, NGOs, Volunteers, Administrators)
+model User {
+  id           String                 @id @default(uuid())
+  email        String                 @unique
+  passwordHash String
+  name         String
+  organization String?
+  role         Role
+  verification VerifStatus            @default(PENDING)
+  isAvailable  Boolean                @default(true) // For delivery partner availability status
+  licenseDoc   String?                // Uploaded registration / license document path
+  isDemo       Boolean                @default(false)
+  capacity     Int?
+  vehicleType  String?
+  lat          Float?
+  lng          Float?
+  createdAt    DateTime               @default(now())
+  docs         VerificationDocument[]
+  ngoProfile   NGOProfile?
+  donations    Donation[]             @relation("DonationDonor")
+  assignments  Reservation[]          @relation("ReservationCollector")
+  notifications Notification[]
+}
+
+model NGOProfile {
+  id                String        @id @default(uuid())
+  userId            String        @unique
+  user              User          @relation(fields: [userId], references: [id])
+  lat               Float
+  lng               Float
+  freeCapacity      Int
+  acceptsCategories String[]
+  excludedAllergens String[]
+  maxKm             Float
+  reservations      Reservation[]
+}
+
+// Verification identity documents uploaded by NGOs/volunteers/donors
+model VerificationDocument {
+  id          String      @id @default(uuid())
+  userId      String
+  user        User        @relation(fields: [userId], references: [id])
+  storagePath String
+  docType     String      @default("REGISTRATION_LICENSE")
+  reviewedBy  String?
+  status      VerifStatus @default(PENDING)
+  createdAt   DateTime    @default(now())
+}
+
+// Food donation listings
+model Donation {
+  id          String         @id @default(uuid())
+  donorId     String
+  donor       User           @relation("DonationDonor", fields: [donorId], references: [id])
+  title       String
+  category    String
+  quantity    Int
+  allergens   String[]
+  storageOk   Boolean        @default(false)
+  lat         Float
+  lng         Float
+  deadline    DateTime
+  status      DonationStatus @default(LISTED)
+  isDemo      Boolean        @default(false)
+  createdAt   DateTime       @default(now())
+  reservation Reservation?
+  deliveryProof DeliveryProof?
+}
+
+// One-to-one reservation binding donation to an NGO and handover method
+model Reservation {
+  id           String       @id @default(uuid())
+  donationId   String       @unique
+  donation     Donation     @relation(fields: [donationId], references: [id])
+  ngoId        String
+  ngo          NGOProfile   @relation(fields: [ngoId], references: [id])
+  collectorId  String?
+  collector    User?        @relation("ReservationCollector", fields: [collectorId], references: [id])
+  handoverType HandoverType @default(VOLUNTEER) // Supports VOLUNTEER dispatch or NGO_SELF_PICKUP
+  deliveredQty Int?
+  reservedAt   DateTime     @default(now())
+}
+
+// HMAC-hashed OTP storage (never saves plaintext codes)
+model OtpRecord {
+  id             String    @id @default(uuid())
+  donationId     String
+  stage          String
+  hash           String
+  allowedEntrant String
+  expiresAt      DateTime
+  attempts       Int       @default(0)
+  usedAt         DateTime?
+
+  @@unique([donationId, stage])
+}
+
+// Breadcrumb geo-updates for transit tracking
+model LocationUpdate {
+  id         String   @id @default(uuid())
+  donationId String
+  userId     String
+  lat        Float
+  lng        Float
+  at         DateTime @default(now())
+}
+
+// Proof of delivery evidence (photo + coordinates)
+model DeliveryProof {
+  id         String   @id @default(uuid())
+  donationId String   @unique
+  donation   Donation @relation(fields: [donationId], references: [id])
+  photoPath  String
+  lat        Float?
+  lng        Float?
+  flagged    Boolean  @default(false)
+  uploadedAt DateTime @default(now())
+}
+
+// Donor / NGO mutual rating and dispute reporting
+model Feedback {
+  id         String   @id @default(uuid())
+  donationId String
+  ratings    Json
+  complaint  String?
+  createdAt  DateTime @default(now())
+}
+
+// Real-time system notifications
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  title     String   @default("Update")
+  body      String
+  readAt    DateTime?
+  createdAt DateTime @default(now())
+}
+
+// Cryptographic hash-chained immutable audit event
+model AuditEvent {
+  id         Int      @id @default(autoincrement())
+  type       String
+  donationId String
+  payload    Json
+  ts         DateTime
+  prevHash   String
+  hash       String
+}

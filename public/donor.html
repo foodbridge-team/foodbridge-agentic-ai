@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Donor Dashboard — FoodBridge AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="donor.css" />
+</head>
+<body class="theme-donor-portal">
+  <div class="ambient-glow glow-1"></div>
+  <div class="ambient-glow glow-2"></div>
+
+  <div class="portal-wrapper">
+    <!-- Top Bar -->
+    <header class="portal-header">
+      <div class="header-left">
+        <a href="index.html" class="brand-link">
+          <div class="brand-badge-icon">🌱</div>
+          <div>
+            <div class="portal-brand-title">FoodBridge <span class="text-emerald">AI</span></div>
+            <div class="portal-brand-sub">Donor Management Console</div>
+          </div>
+        </a>
+      </div>
+
+      <!-- User Profile & Quick Stats -->
+      <div class="header-right">
+        <div class="user-chip">
+          <span class="user-avatar" id="donorAvatar">👨‍🍳</span>
+          <div class="user-details">
+            <span class="user-name" id="donorName">Ocean Pearl Banquets</span>
+            <span class="user-role-badge">Verified Food Donor</span>
+          </div>
+        </div>
+
+        <button id="btnDonorLogout" class="btn btn-sm btn-outline" title="Log Out">
+          <span>Sign Out ➔</span>
+        </button>
+      </div>
+    </header>
+
+    <section id="accountNotifications" class="notifications-panel" aria-live="polite"></section>
+
+    <!-- Quick Stats Ticker -->
+    <section class="donor-stats-banner">
+      <div class="stat-card">
+        <div class="stat-icon">🍲</div>
+        <div class="stat-content">
+          <span class="stat-number" id="statMealsDonated">0</span>
+          <span class="stat-label">Meals Confirmed Received</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon">🌱</div>
+        <div class="stat-content">
+          <span class="stat-number" id="statCo2Saved">0 kg</span>
+          <span class="stat-label">CO₂ Emissions Saved</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon">📜</div>
+        <div class="stat-content">
+          <span class="stat-number">—</span>
+          <span class="stat-label">Confirmed Handover Rate</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon">🛡️</div>
+        <div class="stat-content">
+          <span class="stat-number text-emerald">SHA-256</span>
+          <span class="stat-label">Audit Chain Integrity</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Main Donor Workspace -->
+    <main class="donor-workspace">
+      <!-- Left: Post Donation Form -->
+      <section class="glass-card donor-form-card">
+        <div class="card-title-bar">
+          <div class="card-icon-badge">📦</div>
+          <div>
+            <h3>List Fresh Surplus Food</h3>
+            <p class="card-caption">Instantly matched with verified recipient NGOs in real time</p>
+          </div>
+        </div>
+
+        <form id="donorPostForm" class="app-form">
+          <div class="form-field">
+            <label for="postTitle">Donation Title / Description</label>
+            <input type="text" id="postTitle" class="form-input" placeholder="e.g. 40 Biryani Trays & Dal Curry from Corporate Dinner" required />
+          </div>
+
+          <div class="form-row">
+            <div class="form-field">
+              <label for="postCategory">Category</label>
+              <select id="postCategory" class="form-input">
+                <option value="cooked_meals">🍲 Cooked Warm Meals</option>
+                <option value="bakery">🍞 Bakery & Breads</option>
+                <option value="packaged">📦 Packaged Groceries</option>
+                <option value="produce">🍎 Fresh Produce / Fruits</option>
+              </select>
+            </div>
+
+            <div class="form-row">
+              <div class="form-field">
+                <label for="postLat">Pickup Latitude</label>
+                <input type="number" id="postLat" class="form-input" min="-90" max="90" step="any" placeholder="12.9141" required />
+              </div>
+              <div class="form-field">
+                <label for="postLng">Pickup Longitude</label>
+                <input type="number" id="postLng" class="form-input" min="-180" max="180" step="any" placeholder="74.856" required />
+              </div>
+            </div>
+
+            <div class="form-field">
+              <label for="postQuantity">Quantity (Portions / Meals)</label>
+              <div class="qty-input-wrap">
+                <input type="number" id="postQuantity" class="form-input" value="45" min="5" max="1000" required />
+                <div class="quick-qty-pills">
+                  <button type="button" class="qty-pill" onclick="setQty(25)">25</button>
+                  <button type="button" class="qty-pill" onclick="setQty(50)">50</button>
+                  <button type="button" class="qty-pill" onclick="setQty(100)">100</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-field">
+            <label for="postHours">Safe Expiration Window</label>
+            <div class="slider-row">
+              <input type="range" id="postHours" min="1" max="12" step="0.5" value="4" class="app-slider" />
+              <span id="postHoursDisplay" class="slider-val">4.0 hrs</span>
+            </div>
+          </div>
+
+          <div class="form-field">
+            <label>Allergen Declarations</label>
+            <div class="chip-checkbox-group">
+              <label class="chip-check"><input type="checkbox" id="algDairy" checked> <span>Dairy</span></label>
+              <label class="chip-check"><input type="checkbox" id="algNuts"> <span>Nuts</span></label>
+              <label class="chip-check"><input type="checkbox" id="algGluten"> <span>Gluten</span></label>
+              <label class="chip-check"><input type="checkbox" id="algNonVeg"> <span>Non-Veg Meat</span></label>
+            </div>
+          </div>
+
+          <div class="form-field">
+            <label class="toggle-control">
+              <input type="checkbox" id="postStorage" checked />
+              <span class="toggle-slider"></span>
+              <span class="toggle-label">Packed in insulated food-grade containers</span>
+            </label>
+          </div>
+
+          <button type="submit" id="btnPublish" class="btn btn-primary btn-block">
+            <span>🚀 Publish Surplus Food Listing</span>
+          </button>
+        </form>
+      </section>
+
+      <!-- Right: Active Listings & Handover Stream -->
+      <section class="glass-card donor-listings-card">
+        <div class="card-title-bar">
+          <div class="card-icon-badge">📋</div>
+          <div>
+            <h3>My Active Food Donations</h3>
+            <p class="card-caption">Manage pickup OTP codes and track arriving volunteers</p>
+          </div>
+        </div>
+
+        <div id="donorListingsStream" class="cards-stream">
+          <!-- Rendered via JS -->
+        </div>
+      </section>
+    </main>
+
+    <!-- Global OTP Modal -->
+    <div id="donorModal" class="app-modal">
+      <div class="modal-backdrop" onclick="closeDonorModal()"></div>
+      <div class="modal-dialog">
+        <div class="modal-header">
+          <div class="modal-title-wrap">
+            <span class="modal-icon">🔑</span>
+            <h3>Donor Pickup Verification Code</h3>
+          </div>
+          <button class="modal-close" onclick="closeDonorModal()">&times;</button>
+        </div>
+        <div class="modal-body" id="donorModalBody">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Notification Toast Container -->
+    <div id="toastContainer" class="toast-container"></div>
+  </div>
+
+  <script src="api.js"></script>
+  <script src="donor.js"></script>
+</body>
+</html>
