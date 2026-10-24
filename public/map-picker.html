@@ -206,10 +206,19 @@
 
       map = L.map("mapContainer").setView([currentLat, currentLng], 15);
 
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-        maxZoom: 19
+      L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+        subdomains: "abcd",
+        maxZoom: 20
       }).addTo(map);
+
+      setTimeout(() => {
+        map.invalidateSize();
+      }, 200);
+
+      window.addEventListener("resize", () => {
+        if (map) map.invalidateSize();
+      });
 
       // Create draggable marker
       marker = L.marker([currentLat, currentLng], {
@@ -234,7 +243,12 @@
     async function reverseGeocode(lat, lng) {
       updateDisplay(lat, lng, `${lat.toFixed(4)}, ${lng.toFixed(4)} — Updating address...`);
       try {
-        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 2000);
+        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`, {
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
         if (res.ok) {
           const data = await res.json();
           if (data && data.display_name) {
