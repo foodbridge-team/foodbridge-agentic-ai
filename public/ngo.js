@@ -411,11 +411,18 @@ function initEmbeddedLiveMap() {
   // Add zoom control at bottom right matching UI
   L.control.zoom({ position: "bottomright" }).addTo(map);
 
-  L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
+  const liveTiles = L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
     maxZoom: 20,
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a> / Esri',
     subdomains: "abcd"
   }).addTo(map);
+
+  liveTiles.on("tileerror", function(e) {
+    if (e.tile && !e.tile._fallbackLoaded && e.coords) {
+      e.tile._fallbackLoaded = true;
+      e.tile.src = `https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/${e.coords.z}/${e.coords.y}/${e.coords.x}`;
+    }
+  });
 
   // Origin Marker with Callout Card matching screenshot
   const donorIcon = L.divIcon({
@@ -985,11 +992,18 @@ function renderModalMap(containerId, donorLoc, ngoLoc, donorName, ngoName) {
   const map = L.map(containerId).setView([donorLoc.lat, donorLoc.lng], 14);
   modalMapInstance = map;
 
-  L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
+  const modalTiles = L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
     maxZoom: 20,
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a> / Esri',
     subdomains: "abcd"
   }).addTo(map);
+
+  modalTiles.on("tileerror", function(e) {
+    if (e.tile && !e.tile._fallbackLoaded && e.coords) {
+      e.tile._fallbackLoaded = true;
+      e.tile.src = `https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/${e.coords.z}/${e.coords.y}/${e.coords.x}`;
+    }
+  });
 
   L.marker([donorLoc.lat, donorLoc.lng]).addTo(map).bindPopup(`<b>🏪 Donor: ${donorName}</b>`);
   L.marker([ngoLoc.lat, ngoLoc.lng]).addTo(map).bindPopup(`<b>🏢 Shelter: ${ngoName}</b>`);

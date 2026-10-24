@@ -2183,7 +2183,12 @@ const server = http.createServer(async (req, res) => {
         res.end(`Server Error: ${err.code}`);
       }
     } else {
-      res.writeHead(200, { "Content-Type": mimeTypes[ext] || "text/plain" });
+      res.writeHead(200, {
+        "Content-Type": mimeTypes[ext] || "text/plain",
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        "Pragma": "no-cache",
+        "Expires": "0"
+      });
       res.end(content);
     }
   });

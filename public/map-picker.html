@@ -206,11 +206,18 @@
 
       map = L.map("mapContainer").setView([currentLat, currentLng], 15);
 
-      L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+      const pickerTiles = L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a> / Esri',
         subdomains: "abcd",
         maxZoom: 20
       }).addTo(map);
+
+      pickerTiles.on("tileerror", function(e) {
+        if (e.tile && !e.tile._fallbackLoaded && e.coords) {
+          e.tile._fallbackLoaded = true;
+          e.tile.src = `https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/${e.coords.z}/${e.coords.y}/${e.coords.x}`;
+        }
+      });
 
       setTimeout(() => {
         map.invalidateSize();

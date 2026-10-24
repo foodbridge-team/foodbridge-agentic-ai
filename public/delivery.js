@@ -490,11 +490,18 @@ function renderDeliveryLiveMap(containerId, donorLoc, ngoLoc, courierLoc) {
   const map = L.map(containerId).setView([courierLoc.lat, courierLoc.lng], 15);
   liveMapInstance = map;
 
-  L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
+  const liveDeliveryTiles = L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
     maxZoom: 20,
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a> / Esri',
     subdomains: "abcd"
   }).addTo(map);
+
+  liveDeliveryTiles.on("tileerror", function(e) {
+    if (e.tile && !e.tile._fallbackLoaded && e.coords) {
+      e.tile._fallbackLoaded = true;
+      e.tile.src = `https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/${e.coords.z}/${e.coords.y}/${e.coords.x}`;
+    }
+  });
 
   L.marker([donorLoc.lat, donorLoc.lng]).addTo(map).bindPopup("<b>🏪 Donor Kitchen (Hotel)</b>");
   L.marker([ngoLoc.lat, ngoLoc.lng]).addTo(map).bindPopup("<b>🏢 NGO Shelter Destination</b>");
@@ -694,11 +701,18 @@ function openDonorLocationPreview(donationId, title, lat, lng) {
       const map = L.map("donorPreviewMap").setView([lat, lng], 15);
       donorPreviewMapInstance = map;
 
-      L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
+      const previewTiles = L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
         maxZoom: 20,
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a> / Esri',
         subdomains: "abcd"
       }).addTo(map);
+
+      previewTiles.on("tileerror", function(e) {
+        if (e.tile && !e.tile._fallbackLoaded && e.coords) {
+          e.tile._fallbackLoaded = true;
+          e.tile.src = `https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/${e.coords.z}/${e.coords.y}/${e.coords.x}`;
+        }
+      });
       L.marker([lat, lng]).addTo(map).bindPopup(`<b>${escapeHtml(title)}</b><br>Donor Kitchen Location`).openPopup();
       setTimeout(() => map.invalidateSize(), 200);
     } catch (e) {
