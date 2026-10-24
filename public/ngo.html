@@ -3,140 +3,415 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>NGO Shelter Hub — FoodBridge AI</title>
+  <title>NGO Shelter Dashboard — FoodBridge AI</title>
+  <meta name="description" content="Discover nearby surplus food donations, reserve nutritious meals for your community shelter, and track volunteer pickups with live GPS verification." />
+
+  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <!-- Core & Portal Styles -->
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="ngo.css" />
+
+  <!-- Leaflet OpenStreetMap CDN -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+  <!-- Universal Header / Theme Manager -->
   <script src="header.js"></script>
 </head>
 <body class="theme-ngo-portal">
-  <div class="ambient-glow glow-ngo-1"></div>
-  <div class="ambient-glow glow-ngo-2"></div>
-
   <div class="portal-wrapper">
-    <!-- Top Bar -->
-    <header class="portal-header">
-      <div class="header-left">
-        <a href="index.html" class="brand-link">
-          <div class="brand-badge-icon ngo-badge-icon">🏢</div>
-          <div>
-            <div class="portal-brand-title">FoodBridge <span class="text-violet">AI</span></div>
-            <div class="portal-brand-sub">NGO & Community Shelter Console</div>
+
+    <!-- Top Navigation Header matching reference UI -->
+    <header class="app-nav site-universal-header" id="ngoSiteHeader">
+      <div class="nav-left">
+        <a href="index.html" class="brand-badge" style="text-decoration:none">
+          <div class="brand-logo-glow">
+            <span class="brand-emoji">🌱</span>
+          </div>
+          <div class="brand-meta">
+            <div class="brand-title">FoodBridge <span class="gradient-text">AI</span></div>
           </div>
         </a>
       </div>
 
-      <div class="header-right">
-        <button class="control-btn portal-language-toggle" data-language-toggle aria-label="Switch language to Kannada" title="Switch language to Kannada">
-          <span class="btn-icon">🌐</span><span data-language-label>ಕನ್ನಡ</span>
+      <!-- Center Nav Links -->
+      <nav class="nav-links" id="globalNavLinks" aria-label="Main Navigation">
+        <a href="index.html" class="nav-link">
+          <span class="nav-link-icon">🏠</span>
+          <span class="nav-link-text">Home</span>
+        </a>
+        <a href="donor-login.html" class="nav-link">
+          <span class="nav-link-icon">🍽️</span>
+          <span class="nav-link-text">Food Donor</span>
+        </a>
+        <a href="ngo.html" class="nav-link active ngo-active-pill">
+          <span class="nav-link-icon">🏠</span>
+          <span class="nav-link-text">NGO Shelter</span>
+        </a>
+        <a href="delivery-login.html" class="nav-link">
+          <span class="nav-link-icon">👥</span>
+          <span class="nav-link-text">Volunteers</span>
+        </a>
+        <a href="index.html#howItWorks" class="nav-link">
+          <span class="nav-link-icon">ℹ️</span>
+          <span class="nav-link-text">About</span>
+        </a>
+      </nav>
+
+      <!-- Right Controls: Dark Mode, Language, User Chip, Sign Out -->
+      <div class="nav-controls">
+        <button type="button" class="control-btn theme-toggle-btn" id="btnThemeToggle" aria-label="Switch Theme" title="Toggle Light/Dark Theme">
+          <span class="theme-icon-indicator" aria-hidden="true">☀️</span>
+          <span class="theme-label-text">Dark Mode</span>
         </button>
-        <div class="user-chip ngo-user-chip">
-          <span class="user-avatar" id="ngoAvatar">👩‍⚕️</span>
-          <div class="user-details">
-            <span class="user-name" id="ngoName">Seva Trust Care Foundation</span>
-            <span class="user-role-badge text-violet">Verified Relief Partner</span>
+
+        <button type="button" class="control-btn portal-language-toggle" data-language-toggle aria-label="Switch language to Kannada" title="Switch language to Kannada">
+          <span class="btn-icon">🌐</span>
+          <span data-language-label>ಕನ್ನಡ</span>
+        </button>
+
+        <!-- NGO User Chip -->
+        <div class="ngo-user-badge-chip">
+          <span class="ngo-badge-icon" id="ngoAvatar">🏠</span>
+          <div class="ngo-badge-meta">
+            <span class="ngo-badge-name" id="ngoName">NGO Seva Trust</span>
+            <span class="user-role-badge">✓ Verified NGO</span>
           </div>
         </div>
 
-        <button id="btnNgoLogout" class="btn btn-sm btn-outline" title="Log Out">
-          <span>Sign Out ➔</span>
+        <!-- Sign Out Button -->
+        <button type="button" class="btn btn-sm btn-outline ngo-signout-btn" id="btnNgoLogout" title="Sign Out of NGO Shelter Hub">
+          <span>Sign Out</span>
+          <span aria-hidden="true">➔</span>
         </button>
       </div>
     </header>
 
-    <section id="accountNotifications" class="notifications-panel" aria-live="polite"></section>
+    <!-- Subheader / Welcome Banner -->
+    <section class="ngo-hero-header">
+      <div class="ngo-hero-info">
+        <div class="ngo-dashboard-badge">
+          <span class="badge-dot">●</span>
+          <span>NGO SHELTER DASHBOARD</span>
+        </div>
+        <h1 class="ngo-hero-title">Good food, delivered with care.</h1>
+        <p class="ngo-hero-sub">Discover nearby food donations, reserve meals for your community, and track every pickup.</p>
+      </div>
+      <a href="index.html" class="ngo-network-link">
+        <span>View rescue network</span>
+        <span aria-hidden="true">➔</span>
+      </a>
+    </section>
 
-    <!-- Stats Ticker -->
-    <section class="ngo-stats-banner">
-      <div class="stat-card">
-        <div class="stat-icon">📥</div>
-        <div class="stat-content">
-          <span class="stat-number" id="ngoTotalReceived">0</span>
-          <span class="stat-label">Meals Received</span>
+    <!-- 3 Metrics Cards Row -->
+    <section class="ngo-metrics-grid" aria-label="Dashboard Metrics">
+      <!-- 1. Meals Received -->
+      <div class="ngo-metric-card">
+        <div class="metric-icon-wrap icon-meals">
+          <span>🍽️</span>
+        </div>
+        <div class="metric-info">
+          <span class="metric-number" id="ngoTotalReceived">120</span>
+          <span class="metric-label">Meals Received</span>
         </div>
       </div>
 
-      <div class="stat-card">
-        <div class="stat-icon">📦</div>
-        <div class="stat-content">
-          <span class="stat-number text-violet" id="ngoCapacity">—</span>
-          <span class="stat-label">Free Storage Capacity</span>
+      <!-- 2. CO2 Saved -->
+      <div class="ngo-metric-card">
+        <div class="metric-icon-wrap icon-co2">
+          <span>🌱</span>
+        </div>
+        <div class="metric-info">
+          <span class="metric-number" id="ngoCo2Saved">18.5 kg</span>
+          <span class="metric-label">CO₂ Saved</span>
         </div>
       </div>
 
-      <div class="stat-card">
-        <div class="stat-icon">🚴</div>
-        <div class="stat-content">
-          <span class="stat-number text-cyan" id="ngoInboundCount">0</span>
-          <span class="stat-label">Inbound Volunteer Couriers</span>
+      <!-- 3. Active Pickups -->
+      <div class="ngo-metric-card">
+        <div class="metric-icon-wrap icon-pickups">
+          <span>🚚</span>
         </div>
-      </div>
-
-      <div class="stat-card">
-        <div class="stat-icon">🛡️</div>
-        <div class="stat-content">
-          <span class="stat-number text-emerald" id="ngoVerification">—</span>
-          <span class="stat-label">FSSAI / Health Checked</span>
+        <div class="metric-info">
+          <span class="metric-number" id="ngoInboundCount">2</span>
+          <span class="metric-label">Active Pickups</span>
         </div>
       </div>
     </section>
 
-    <!-- Main NGO Workspace -->
-    <main class="ngo-workspace">
-      <!-- Left: Available Surplus Listings to Claim -->
-      <section class="glass-card">
-        <div class="card-title-bar">
-          <div class="card-icon-badge">🍲</div>
-          <div>
-            <h3>Available Surplus Food Nearby</h3>
-            <p class="card-caption">Deterministic feasibility filtering + AI proximity ranking</p>
+    <!-- Main Dashboard 2-Column Grid -->
+    <main class="ngo-dashboard-grid">
+      <!-- LEFT COLUMN: Available Food Donations -->
+      <section class="ngo-panel-card">
+        <div class="panel-header">
+          <div class="panel-icon-circle icon-donations">
+            <span>🎁</span>
+          </div>
+          <div class="panel-title-text">
+            <h3>Available Food Donations</h3>
+            <p>Fresh surplus food matched to verified shelters</p>
           </div>
         </div>
 
-        <div id="ngoSurplusFeed" class="cards-stream">
-          <!-- Rendered via JS -->
+        <!-- Filter Row -->
+        <div class="ngo-filter-bar">
+          <div class="search-input-wrap">
+            <span class="search-icon" aria-hidden="true">🔍</span>
+            <input
+              type="text"
+              id="ngoSearchInput"
+              class="filter-search-input"
+              placeholder="Search meals, hotels, or location"
+              aria-label="Search surplus food"
+            />
+          </div>
+
+          <div class="filter-dropdowns">
+            <select id="ngoCategoryFilter" class="filter-select" aria-label="Filter by category">
+              <option value="all" selected>All Categories</option>
+              <option value="cooked_meals">🍲 Cooked Warm Meals</option>
+              <option value="breakfast">🥞 Breakfast &amp; Tiffin</option>
+              <option value="feast">🍛 Feast &amp; Biryani</option>
+              <option value="bakery">🍞 Bakery &amp; Snacks</option>
+            </select>
+
+            <select id="ngoDistanceFilter" class="filter-select" aria-label="Filter by distance">
+              <option value="5">📍 Within 5 km</option>
+              <option value="10" selected>📍 Within 10 km</option>
+              <option value="25">📍 Within 25 km</option>
+              <option value="all">📍 All Distances</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Surplus Donations Feed (Populated dynamically by ngo.js) -->
+        <div id="ngoSurplusFeed" class="ngo-food-list" aria-live="polite">
+          <!-- Initial fallback / high-speed cards matching reference design -->
+          <article class="ngo-donation-card">
+            <img src="images/food-rice-sambar.svg" alt="Rice & Sambar" class="food-card-thumb" loading="lazy" />
+            <div class="food-card-body">
+              <div>
+                <div class="food-card-top-row">
+                  <div class="food-hotel-title">
+                    <span>🏨 Ocean Pearl Banquets</span>
+                    <span class="verified-donor-pill">✓ Verified</span>
+                  </div>
+                  <span class="food-tag-pill tag-hot">🔥 Hot Donation</span>
+                </div>
+                <div class="food-item-sub">Rice &amp; Sambar</div>
+                <div class="food-meta-row">
+                  <span class="food-meta-item">🍽️ <strong>60 meals</strong></span>
+                  <span class="food-meta-item">⏰ Pickup within 2 hours</span>
+                  <span class="food-meta-item">📍 Mangalore</span>
+                </div>
+              </div>
+              <div class="food-card-actions">
+                <button type="button" class="btn-details" onclick="viewDonationDetails('DONATION-DEMO-1')">View Details</button>
+                <button type="button" class="btn-reserve" onclick="openReserveModal('DONATION-DEMO-1')">Reserve Meals</button>
+              </div>
+            </div>
+          </article>
+
+          <article class="ngo-donation-card">
+            <img src="images/food-dosa-sambar.svg" alt="Breakfast Dosa & Sambar" class="food-card-thumb" loading="lazy" />
+            <div class="food-card-body">
+              <div>
+                <div class="food-card-top-row">
+                  <div class="food-hotel-title">
+                    <span>🏨 Kodilabail Hotel</span>
+                    <span class="verified-donor-pill">✓ Verified</span>
+                  </div>
+                  <span class="food-tag-pill tag-expiring">⏳ Expiring Soon</span>
+                </div>
+                <div class="food-item-sub">Breakfast Dosa &amp; Sambar</div>
+                <div class="food-meta-row">
+                  <span class="food-meta-item">🍽️ <strong>25 meals</strong></span>
+                  <span class="food-meta-item">⏰ Expires in 3.1 hrs</span>
+                  <span class="food-meta-item">📍 Mangalore</span>
+                </div>
+              </div>
+              <div class="food-card-actions">
+                <button type="button" class="btn-details" onclick="viewDonationDetails('DONATION-DEMO-2')">View Details</button>
+                <button type="button" class="btn-reserve" onclick="openReserveModal('DONATION-DEMO-2')">Reserve Meals</button>
+              </div>
+            </div>
+          </article>
+
+          <article class="ngo-donation-card">
+            <img src="images/food-biryani-kheer.svg" alt="Biryani & Kheer" class="food-card-thumb" loading="lazy" />
+            <div class="food-card-body">
+              <div>
+                <div class="food-card-top-row">
+                  <div class="food-hotel-title">
+                    <span>🏨 Mangalorean Banquet</span>
+                    <span class="verified-donor-pill">✓ Verified</span>
+                  </div>
+                  <span class="food-tag-pill tag-fresh">🌿 Fresh Food</span>
+                </div>
+                <div class="food-item-sub">Biryani &amp; Kheer</div>
+                <div class="food-meta-row">
+                  <span class="food-meta-item">🍽️ <strong>35 meals</strong></span>
+                  <span class="food-meta-item">⏰ Expires in 4.6 hrs</span>
+                  <span class="food-meta-item">📍 Mangalore</span>
+                </div>
+              </div>
+              <div class="food-card-actions">
+                <button type="button" class="btn-details" onclick="viewDonationDetails('DONATION-DEMO-3')">View Details</button>
+                <button type="button" class="btn-reserve" onclick="openReserveModal('DONATION-DEMO-3')">Reserve Meals</button>
+              </div>
+            </div>
+          </article>
         </div>
       </section>
 
-      <!-- Right: Inbound Deliveries & Handover -->
-      <section class="glass-card">
-        <div class="card-title-bar">
-          <div class="card-icon-badge">🤝</div>
-          <div>
-            <h3>Claimed Inbound Deliveries & Verification</h3>
-            <p class="card-caption">Generate delivery OTP once food arrives & verify package count</p>
+      <!-- RIGHT COLUMN: Reservations & Pickup Tracking -->
+      <section class="ngo-panel-card right-panel">
+        <div class="panel-header">
+          <div class="panel-icon-circle icon-tracking">
+            <span>📍</span>
+          </div>
+          <div class="panel-title-text">
+            <h3>My Reservations &amp; Pickup Tracking</h3>
+            <p>Manage reserved meals and volunteer arrivals</p>
           </div>
         </div>
 
-        <div id="ngoInboundFeed" class="cards-stream">
-          <!-- Rendered via JS -->
+        <!-- Embedded Interactive Map Card -->
+        <div class="ngo-map-card">
+          <div class="map-card-top-bar">
+            <button type="button" class="map-gps-btn" id="btnMapRecenter" onclick="locateShelterGps()" title="Center GPS location">
+              <span class="pulse-dot"></span>
+              <span>• Live Location</span>
+            </button>
+          </div>
+
+          <!-- Leaflet Live Map Canvas -->
+          <div id="ngoLiveMapCanvas" class="ngo-map-canvas" role="region" aria-label="Interactive Food Pickup & Transit Map"></div>
+
+          <!-- 4-Stage Stepper Bar below map -->
+          <div class="ngo-stepper-bar">
+            <div class="step-node active" id="stepNode1">
+              <div class="step-dot">✓</div>
+              <span>Reserved</span>
+            </div>
+            <div class="step-line active" id="stepLine1"></div>
+
+            <div class="step-node active" id="stepNode2">
+              <div class="step-dot">👤</div>
+              <span>Volunteer Assigned</span>
+            </div>
+            <div class="step-line" id="stepLine2"></div>
+
+            <div class="step-node" id="stepNode3">
+              <div class="step-dot">📦</div>
+              <span>Picked Up</span>
+            </div>
+            <div class="step-line" id="stepLine3"></div>
+
+            <div class="step-node" id="stepNode4">
+              <div class="step-dot">🏠</div>
+              <span>Delivered</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Food Safety Checklist Card -->
+        <div class="food-safety-card">
+          <div class="safety-card-header">
+            <div class="safety-title-group">
+              <span class="safety-icon" aria-hidden="true">🛡️</span>
+              <div>
+                <h4>Food Safety Checklist</h4>
+                <p>Ensure safe and healthy meals for your community</p>
+              </div>
+            </div>
+            <span class="verified-shelter-badge">✓ Verified Shelter</span>
+          </div>
+
+          <div class="safety-checklist">
+            <div class="safety-check-item">
+              <span class="check-mark">✓</span>
+              <span>Check preparation time</span>
+            </div>
+            <div class="safety-check-item">
+              <span class="check-mark">✓</span>
+              <span>Review allergen details</span>
+            </div>
+            <div class="safety-check-item">
+              <span class="check-mark">✓</span>
+              <span>Confirm insulated packaging</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Active Reserved Inbound Orders Stream -->
+        <div style="margin-top:1.25rem">
+          <h4 style="font-size:0.92rem;font-weight:800;color:var(--ngo-text);margin:0 0 0.6rem">Active Pickup Operations</h4>
+          <div id="ngoInboundFeed">
+            <!-- Populated dynamically by renderInboundDeliveries() in ngo.js -->
+          </div>
         </div>
       </section>
     </main>
 
-    <!-- Global OTP Modal -->
-    <div id="ngoModal" class="app-modal">
+    <!-- Bottom Feature Trust Bar -->
+    <footer class="ngo-trust-bar" aria-label="Platform Highlights">
+      <div class="trust-item">
+        <span class="trust-icon">🌱</span>
+        <span>Food Rescue</span>
+      </div>
+      <div class="trust-divider" aria-hidden="true"></div>
+
+      <div class="trust-item">
+        <span class="trust-icon">👥</span>
+        <span>Community Support</span>
+      </div>
+      <div class="trust-divider" aria-hidden="true"></div>
+
+      <div class="trust-item">
+        <span class="trust-icon">🛡️</span>
+        <span>Safe &amp; Verified</span>
+      </div>
+      <div class="trust-divider" aria-hidden="true"></div>
+
+      <div class="trust-item">
+        <span class="trust-icon">📍</span>
+        <span>Real-time Tracking</span>
+      </div>
+      <div class="trust-divider" aria-hidden="true"></div>
+
+      <div class="trust-item">
+        <span class="trust-icon">♻️</span>
+        <span>Sustainable Future</span>
+      </div>
+    </footer>
+
+    <!-- Universal NGO Modal Container -->
+    <div id="ngoModal" class="app-modal" role="dialog" aria-modal="true" aria-labelledby="ngoModalTitle">
       <div class="modal-backdrop" onclick="closeNgoModal()"></div>
       <div class="modal-dialog">
         <div class="modal-header">
           <div class="modal-title-wrap">
-            <span class="modal-icon">🔑</span>
-            <h3>Delivery Handover OTP</h3>
+            <span class="modal-icon" id="ngoModalIcon">🍲</span>
+            <h3 id="ngoModalTitle">Details</h3>
           </div>
-          <button class="modal-close" onclick="closeNgoModal()">&times;</button>
+          <button type="button" class="modal-close" onclick="closeNgoModal()" aria-label="Close modal">&times;</button>
         </div>
         <div class="modal-body" id="ngoModalBody">
-          <!-- Dynamic -->
+          <!-- Injected dynamically -->
         </div>
       </div>
     </div>
 
     <!-- Notification Toast Container -->
-    <div id="toastContainer" class="toast-container"></div>
+    <div id="toastContainer" class="toast-container" aria-live="polite"></div>
   </div>
 
+  <!-- Client-side Scripts -->
   <script src="api.js"></script>
   <script src="i18n.js"></script>
   <script src="footer.js"></script>

@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 120" fill="none">
+  <rect width="160" height="120" rx="12" fill="#F8FAFC"/>
+  <!-- Plate Base -->
+  <ellipse cx="80" cy="62" rx="68" ry="46" fill="#E2E8F0"/>
+  <ellipse cx="80" cy="60" rx="62" ry="40" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
+  <ellipse cx="80" cy="59" rx="55" ry="34" fill="#F1F5F9"/>
+
+  <!-- Steamed Rice Mound -->
+  <ellipse cx="62" cy="58" rx="35" ry="24" fill="#FFFFFF"/>
+  <ellipse cx="62" cy="54" rx="28" ry="18" fill="#F8FAFC"/>
+  <circle cx="55" cy="50" r="1.5" fill="#CBD5E1"/>
+  <circle cx="68" cy="52" r="1.5" fill="#CBD5E1"/>
+  <circle cx="60" cy="57" r="1.5" fill="#CBD5E1"/>
+  <circle cx="72" cy="56" r="1.5" fill="#CBD5E1"/>
+  <!-- Coriander on Rice -->
+  <path d="M 60 48 C 63 44, 67 46, 65 50 C 62 49, 61 48, 60 48 Z" fill="#16A34A"/>
+
+  <!-- Sambar Bowl (Katori) -->
+  <ellipse cx="108" cy="56" rx="26" ry="20" fill="#64748B"/>
+  <ellipse cx="108" cy="54" rx="24" ry="18" fill="#94A3B8"/>
+  <ellipse cx="108" cy="53" rx="22" ry="16" fill="#D97706"/>
+  <ellipse cx="108" cy="53" rx="19" ry="13" fill="#F59E0B"/>
+  <!-- Sambar Veggies / Mustard -->
+  <circle cx="104" cy="52" r="2.5" fill="#DC2626"/>
+  <circle cx="114" cy="54" r="2" fill="#15803D"/>
+  <circle cx="108" cy="56" r="1.5" fill="#78350F"/>
+  <path d="M 106 50 C 110 48, 112 52, 110 54 Z" fill="#16A34A"/>
+</svg>

@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
@@ -74,8 +74,8 @@ model NGOProfile {
   lat               Float
   lng               Float
   freeCapacity      Int
-  acceptsCategories String[]
-  excludedAllergens String[]
+  acceptsCategories Json
+  excludedAllergens Json
   maxKm             Float
   reservations      Reservation[]
 }
@@ -101,7 +101,7 @@ model Donation {
   pickupAddress String
   category      String
   quantity      Int
-  allergens     String[]
+  allergens     Json
   storageOk     Boolean        @default(false)
   lat           Float
   lng           Float

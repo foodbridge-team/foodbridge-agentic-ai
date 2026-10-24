@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 120" fill="none">
+  <rect width="160" height="120" rx="12" fill="#F8FAFC"/>
+  <!-- Dark Serving Bowl Base -->
+  <ellipse cx="80" cy="64" rx="66" ry="44" fill="#334155"/>
+  <ellipse cx="80" cy="62" rx="62" ry="40" fill="#0F172A"/>
+
+  <!-- Golden Saffron Dum Biryani -->
+  <ellipse cx="80" cy="60" rx="58" ry="36" fill="#D97706"/>
+  <ellipse cx="80" cy="58" rx="54" ry="32" fill="#F59E0B"/>
+  <ellipse cx="80" cy="56" rx="46" ry="26" fill="#FBBF24"/>
+
+  <!-- Rice Grains / Spices / Fried Onions (Birista) -->
+  <ellipse cx="70" cy="50" rx="4" ry="1.5" fill="#78350F"/>
+  <ellipse cx="88" cy="55" rx="5" ry="1.5" fill="#78350F"/>
+  <ellipse cx="60" cy="56" rx="4" ry="1.5" fill="#78350F"/>
+  <ellipse cx="98" cy="60" rx="4" ry="1.5" fill="#78350F"/>
+  <circle cx="75" cy="58" r="2" fill="#DC2626"/>
+  <circle cx="92" cy="50" r="2" fill="#DC2626"/>
+
+  <!-- Fresh Mint & Coriander -->
+  <path d="M 72 52 C 75 46, 82 48, 80 54 Z" fill="#15803D"/>
+  <path d="M 85 54 C 88 48, 95 50, 92 56 Z" fill="#16A34A"/>
+  <circle cx="82" cy="54" r="1.5" fill="#15803D"/>
+
+  <!-- Boiled Egg Half on Biryani -->
+  <ellipse cx="60" cy="64" rx="12" ry="9" fill="#FFFFFF"/>
+  <ellipse cx="60" cy="64" rx="6" ry="5" fill="#FACC15"/>
+
+  <!-- Small Kheer Cup on Side -->
+  <ellipse cx="112" cy="66" rx="15" ry="12" fill="#CBD5E1"/>
+  <ellipse cx="112" cy="64" rx="13" ry="10" fill="#FEF3C7"/>
+  <!-- Pistachio / Saffron on Kheer -->
+  <circle cx="111" cy="63" r="1" fill="#15803D"/>
+  <circle cx="114" cy="64" r="1" fill="#DC2626"/>
+</svg>

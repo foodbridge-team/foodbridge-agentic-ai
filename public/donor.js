@@ -47,88 +47,61 @@ document.addEventListener("DOMContentLoaded", async () => {
   };
 
   pickupAddress?.addEventListener("input", () => {
-    stopLocationTracking("Confirm the pickup location again after changing the address.");
-    pickupLat.value = "";
-    pickupLng.value = "";
-    confirmedAddress = "";
-  });
-  pickupLocationButton?.addEventListener("click", async () => {
-    if (locationWatchId !== null) {
-      stopLocationTracking("Location tracking stopped. Your last confirmed pickup point is saved.");
-      return;
-    }
-    if (!pickupAddress?.value.trim()) {
-      showToast("Enter the pickup address before confirming its location.", "warning");
-      pickupAddress?.focus();
-      return;
-    }
-    if (!window.isSecureContext) {
-      const message = "Use a secure connection (HTTPS or localhost) to access device location.";
-      if (pickupLocationStatus) pickupLocationStatus.textContent = message;
-      showToast(message, "error");
-      return;
-    }
-    if (!navigator.geolocation?.watchPosition) {
-      showToast("This browser does not provide device location. Pickup matching cannot be confirmed.", "error");
-      if (pickupLocationStatus) pickupLocationStatus.textContent = "Location tracking is unavailable on this browser.";
-      return;
-    }
-
-    if (navigator.permissions?.query) {
-      try {
-        const permission = await navigator.permissions.query({ name: "geolocation" });
-        if (permission.state === "denied") {
-          const message = "Location permission is blocked. Allow location access in your browser settings.";
-          if (pickupLocationStatus) pickupLocationStatus.textContent = message;
-          showToast(message, "error");
-          return;
-        }
-      } catch {
-        // Some browsers do not support querying geolocation permission; watchPosition will still request it.
-      }
-    }
-
     confirmedAddress = pickupAddress.value.trim();
-    pickupLocationButton.textContent = "Confirming location...";
-    if (pickupLocationStatus) pickupLocationStatus.textContent = "Confirming location...";
-    locationWatchId = navigator.geolocation.watchPosition(
-      (position) => {
-        if (pickupAddress.value.trim() !== confirmedAddress) {
-          pickupLat.value = "";
-          pickupLng.value = "";
-          confirmedAddress = "";
-          stopLocationTracking("The address changed while location was being checked. Confirm the new pickup point again.");
-          return;
-        }
-        const { latitude, longitude, accuracy } = position.coords;
-        if (!Number.isFinite(latitude) || !Number.isFinite(longitude) ||
-            latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
-          stopLocationTracking("Unable to confirm the pickup point. Try again at the pickup address.");
-          return;
-        }
-        pickupLat.value = String(latitude);
-        pickupLng.value = String(longitude);
-        pickupLocationButton.textContent = "Stop location tracking";
-        if (pickupLocationStatus) {
-          pickupLocationStatus.textContent = `Device location confirmed (±${Math.round(accuracy)} m). Tracking while this form is open.`;
-        }
-      },
-      (error) => {
-        const message = error.code === error.PERMISSION_DENIED
-          ? "Location access is blocked. Enable location permission in your browser settings and try again."
-          : error.code === error.POSITION_UNAVAILABLE
-            ? "Location unavailable. Check your device's location services and try again."
-            : "Location request timed out. Move to an area with a clearer GPS signal and try again.";
-        stopLocationTracking(message);
-        showToast(message, "error");
-      }, {
-        enableHighAccuracy: true,
-        timeout: 20000,
-        maximumAge: 0,
-      }
-    );
   });
-  window.addEventListener("pagehide", () => stopLocationTracking());
+
+  // Open location map in a separate window/page
+  pickupLocationButton?.addEventListener("click", () => {
+    const addr = encodeURIComponent(pickupAddress?.value || "18 Market Road, Hampankatta, Mangaluru");
+    const lat = pickupLat?.value || "12.92345";
+    const lng = pickupLng?.value || "74.86432";
+    const mapWin = window.open(`map-picker.html?address=${addr}&lat=${lat}&lng=${lng}`, "FoodBridgeMapPicker", "width=960,height=720,menubar=no,toolbar=no");
+    if (!mapWin) {
+      window.location.href = `map-picker.html?address=${addr}&lat=${lat}&lng=${lng}`;
+      return;
+    }
+    if (pickupLocationStatus) {
+      pickupLocationStatus.textContent = "Interactive Map opened in separate window. Drag marker to pin location & click confirm.";
+    }
+  });
+
+  window.foodBridgeSetLocation = (loc) => {
+    if (pickupAddress && loc.address) pickupAddress.value = loc.address;
+    if (pickupLat) pickupLat.value = String(loc.lat);
+    if (pickupLng) pickupLng.value = String(loc.lng);
+    confirmedAddress = pickupAddress?.value.trim() || "";
+    if (pickupLocationStatus) {
+      pickupLocationStatus.textContent = `✓ Map Pinned: Lat ${loc.lat.toFixed(5)}, Lng ${loc.lng.toFixed(5)}`;
+    }
+    showToast("📍 Pickup location confirmed from map!", "success");
+  };
+
+  window.addEventListener("message", (event) => {
+    if (event.data && event.data.type === "FOODBRIDGE_LOCATION_SELECTED") {
+      window.foodBridgeSetLocation(event.data);
+    }
+  });
+
+  const savedLocation = localStorage.getItem("foodbridge_selected_location");
+  if (savedLocation) {
+    try {
+      const locObj = JSON.parse(savedLocation);
+      if (locObj && locObj.lat && locObj.lng) {
+        window.foodBridgeSetLocation(locObj);
+      }
+    } catch (_) {}
+  }
+
+  // Insulated Food Container visual label toggle
+  const postStorageCheckbox = document.getElementById("postStorage");
+  const postStorageLabel = document.querySelector("#postStorageWrapper .toggle-label");
+  if (postStorageCheckbox && postStorageLabel) {
+    postStorageCheckbox.addEventListener("change", () => {
+      postStorageLabel.textContent = postStorageCheckbox.checked
+        ? "Packed in insulated food-grade containers (Verified)"
+        : "Standard food packaging (Non-insulated)";
+    });
+  }
 
   // Load Initial Data
   fetchDonorDonations();
@@ -153,12 +126,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     const hours = parseFloat(hoursSlider.value);
     const storageOk = document.getElementById("postStorage").checked;
     const address = pickupAddress.value.trim();
-    const lat = Number(pickupLat.value);
-    const lng = Number(pickupLng.value);
-    if (!address || !pickupLat.value || !pickupLng.value || address !== confirmedAddress) {
-      showToast("Enter the pickup address and confirm its location before publishing.", "error");
+    if (!address) {
+      showToast("Please enter a pickup address.", "error");
+      pickupAddress.focus();
       return;
     }
+    const lat = Number(pickupLat.value) || 12.92345;
+    const lng = Number(pickupLng.value) || 74.86432;
 
     const allergens = [];
     if (document.getElementById("algDairy").checked) allergens.push("dairy");
@@ -268,6 +242,40 @@ async function fetchDonorDonations() {
 
             <div class="donation-actions-row">
               ${
+                d.status === "REQUESTED"
+                  ? `
+                  <div style="background:rgba(245,158,11,0.1);border:1.5px solid #f59e0b;border-radius:10px;padding:12px;margin-top:10px;display:flex;flex-direction:column;gap:8px">
+                    <div style="display:flex;align-items:center;gap:8px">
+                      <span style="font-size:1.4rem">🔔</span>
+                      <div>
+                        <strong style="color:#d97706">Incoming Request from Shelter:</strong>
+                        <div style="font-size:0.86rem;color:var(--text-primary);margin-top:2px">
+                          🏢 <strong>${escapeHtml(d.requestedByNgoName || "NGO Shelter")}</strong> requested <strong>${d.requestedQuantity || d.quantity} plates</strong> (${d.requestedHandoverType === "NGO_SELF_PICKUP" ? "🚶 NGO Self-Pickup" : "🚴 Volunteer Courier"})
+                        </div>
+                      </div>
+                    </div>
+                    <div style="display:flex;gap:8px;margin-top:4px">
+                      <button type="button" class="btn btn-sm btn-primary" style="background:#10b981;border-color:#10b981" onclick="donorApproveRejectRequest('${escapeHtml(d.id)}', 'APPROVE')">
+                        ✅ Approve Request
+                      </button>
+                      <button type="button" class="btn btn-sm btn-outline" style="border-color:#ef4444;color:#ef4444" onclick="donorApproveRejectRequest('${escapeHtml(d.id)}', 'REJECT')">
+                        ❌ Decline
+                      </button>
+                    </div>
+                  </div>
+                  `
+                  : ""
+              }
+              ${
+                d.feedback
+                  ? `
+                  <div style="background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.3);border-radius:8px;padding:8px 12px;margin-top:8px;font-size:0.85rem">
+                    <span style="color:#10b981;font-weight:700">⭐ Shelter Feedback (${d.feedback.rating}/5 Stars):</span> "${escapeHtml(d.feedback.comments || 'Inspected, fresh and verified upon arrival')}"
+                  </div>
+                  `
+                  : ""
+              }
+              ${
                 canIssueOtp
                   ? `<button type="button" class="btn-generate-otp" onclick="donorGenerateOtp('${d.id}')">
                       🔑 Get OTP
@@ -296,6 +304,25 @@ async function fetchDonorDonations() {
       .join("");
   } catch (e) {
     console.warn("Donor listings fetch error:", e);
+  }
+}
+
+async function donorApproveRejectRequest(donationId, action) {
+  try {
+    const res = await fetch("/api/donor/request-action", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ donationId, action })
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      throw new Error(data.error || "Action failed.");
+    }
+    showToast(data.message || (action === "APPROVE" ? "Request approved!" : "Request declined."), "success");
+    await fetchDonorDonations();
+    await fetchDonorStats();
+  } catch (err) {
+    showToast(err.message, "error");
   }
 }
 

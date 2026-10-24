@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 120" fill="none">
+  <rect width="160" height="120" rx="12" fill="#F8FAFC"/>
+  <!-- Wooden Platter Base -->
+  <ellipse cx="80" cy="66" rx="66" ry="42" fill="#D97706" fill-opacity="0.3"/>
+  <ellipse cx="80" cy="64" rx="62" ry="38" fill="#FDE68A"/>
+  <ellipse cx="80" cy="62" rx="56" ry="32" fill="#FEF3C7"/>
+
+  <!-- Crispy Samosas -->
+  <!-- Left Samosa -->
+  <polygon points="45,45 68,75 30,75" fill="#D97706"/>
+  <polygon points="46,47 65,73 33,73" fill="#F59E0B"/>
+  <line x1="46" y1="47" x2="48" y2="73" stroke="#B45309" stroke-width="1.5" stroke-opacity="0.6"/>
+
+  <!-- Right Samosa -->
+  <polygon points="75,42 98,72 60,72" fill="#D97706"/>
+  <polygon points="76,44 95,70 63,70" fill="#FBBF24"/>
+  <line x1="76" y1="44" x2="78" y2="70" stroke="#B45309" stroke-width="1.5" stroke-opacity="0.6"/>
+
+  <!-- Fresh Green Chutney Dip -->
+  <circle cx="118" cy="62" r="16" fill="#64748B"/>
+  <circle cx="118" cy="61" r="14" fill="#15803D"/>
+  <circle cx="118" cy="61" r="11" fill="#16A34A"/>
+  <circle cx="117" cy="59" r="2" fill="#DC2626"/>
+  <circle cx="120" cy="63" r="1.5" fill="#FBBF24"/>
+
+  <!-- Fresh Mint Sprigs -->
+  <path d="M 52 42 C 55 36, 62 38, 60 44 Z" fill="#15803D"/>
+  <path d="M 85 38 C 88 32, 95 34, 92 40 Z" fill="#16A34A"/>
+</svg>

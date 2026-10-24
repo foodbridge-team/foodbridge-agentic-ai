@@ -1,0 +1,250 @@
+{
+  "Bengaluru Urban": {
+    "division": "Bengaluru",
+    "ngos": 3,
+    "donors": 2,
+    "volunteers": 1,
+    "mealCapacity": 595,
+    "activeRescues": 1
+  },
+  "Bengaluru Rural": {
+    "division": "Bengaluru",
+    "ngos": 3,
+    "donors": 2,
+    "volunteers": 1,
+    "mealCapacity": 595,
+    "activeRescues": 1
+  },
+  "Ramanagara": {
+    "division": "Bengaluru",
+    "ngos": 3,
+    "donors": 2,
+    "volunteers": 1,
+    "mealCapacity": 595,
+    "activeRescues": 1
+  },
+  "Chikkaballapura": {
+    "division": "Bengaluru",
+    "ngos": 3,
+    "donors": 2,
+    "volunteers": 1,
+    "mealCapacity": 595,
+    "activeRescues": 1
+  },
+  "Kolar": {
+    "division": "Bengaluru",
+    "ngos": 3,
+    "donors": 2,
+    "volunteers": 1,
+    "mealCapacity": 595,
+    "activeRescues": 1
+  },
+  "Tumakuru": {
+    "division": "Bengaluru",
+    "ngos": 3,
+    "donors": 2,
+    "volunteers": 1,
+    "mealCapacity": 595,
+    "activeRescues": 1
+  },
+  "Chitradurga": {
+    "division": "Bengaluru",
+    "ngos": 3,
+    "donors": 2,
+    "volunteers": 1,
+    "mealCapacity": 595,
+    "activeRescues": 1
+  },
+  "Davanagere": {
+    "division": "Bengaluru",
+    "ngos": 3,
+    "donors": 2,
+    "volunteers": 1,
+    "mealCapacity": 595,
+    "activeRescues": 1
+  },
+  "Shivamogga": {
+    "division": "Bengaluru",
+    "ngos": 3,
+    "donors": 2,
+    "volunteers": 1,
+    "mealCapacity": 595,
+    "activeRescues": 1
+  },
+  "Mysuru": {
+    "division": "Mysuru",
+    "ngos": 3,
+    "donors": 2,
+    "volunteers": 1,
+    "mealCapacity": 595,
+    "activeRescues": 1
+  },
+  "Mandya": {
+    "division": "Mysuru",
+    "ngos": 3,
+    "donors": 2,
+    "volunteers": 1,
+    "mealCapacity": 595,
+    "activeRescues": 1
+  },
+  "Hassan": {
+    "division": "Mysuru",
+    "ngos": 3,
+    "donors": 2,
+    "volunteers": 1,
+    "mealCapacity": 595,
+    "activeRescues": 1
+  },
+  "Chamarajanagar": {
+    "division": "Mysuru",
+    "ngos": 3,
+    "donors": 2,
+    "volunteers": 1,
+    "mealCapacity": 595,
+    "activeRescues": 1
+  },
+  "Chikkamagaluru": {
+    "division": "Mysuru",
+    "ngos": 3,
+    "donors": 2,
+    "volunteers": 1,
+    "mealCapacity": 595,
+    "activeRescues": 1
+  },
+  "Kodagu": {
+    "division": "Mysuru",
+    "ngos": 3,
+    "donors": 2,
+    "volunteers": 1,
+    "mealCapacity": 595,
+    "activeRescues": 1
+  },
+  "Dakshina Kannada": {
+    "division": "Mysuru",
+    "ngos": 3,
+    "donors": 2,
+    "volunteers": 1,
+    "mealCapacity": 595,
+    "activeRescues": 1
+  },
+  "Udupi": {
+    "division": "Mysuru",
+    "ngos": 3,
+    "donors": 2,
+    "volunteers": 1,
+    "mealCapacity": 595,
+    "activeRescues": 1
+  },
+  "Belagavi": {
+    "division": "Belagavi",
+    "ngos": 3,
+    "donors": 2,
+    "volunteers": 1,
+    "mealCapacity": 595,
+    "activeRescues": 1
+  },
+  "Dharwad": {
+    "division": "Belagavi",
+    "ngos": 3,
+    "donors": 2,
+    "volunteers": 1,
+    "mealCapacity": 595,
+    "activeRescues": 1
+  },
+  "Vijayapura": {
+    "division": "Belagavi",
+    "ngos": 3,
+    "donors": 2,
+    "volunteers": 1,
+    "mealCapacity": 595,
+    "activeRescues": 1
+  },
+  "Bagalkote": {
+    "division": "Belagavi",
+    "ngos": 3,
+    "donors": 2,
+    "volunteers": 1,
+    "mealCapacity": 595,
+    "activeRescues": 1
+  },
+  "Gadag": {
+    "division": "Belagavi",
+    "ngos": 3,
+    "donors": 2,
+    "volunteers": 1,
+    "mealCapacity": 595,
+    "activeRescues": 1
+  },
+  "Haveri": {
+    "division": "Belagavi",
+    "ngos": 3,
+    "donors": 2,
+    "volunteers": 1,
+    "mealCapacity": 595,
+    "activeRescues": 1
+  },
+  "Uttara Kannada": {
+    "division": "Belagavi",
+    "ngos": 3,
+    "donors": 2,
+    "volunteers": 1,
+    "mealCapacity": 595,
+    "activeRescues": 1
+  },
+  "Kalaburagi": {
+    "division": "Kalaburagi",
+    "ngos": 3,
+    "donors": 2,
+    "volunteers": 1,
+    "mealCapacity": 595,
+    "activeRescues": 1
+  },
+  "Ballari": {
+    "division": "Kalaburagi",
+    "ngos": 3,
+    "donors": 2,
+    "volunteers": 1,
+    "mealCapacity": 595,
+    "activeRescues": 1
+  },
+  "Vijayanagara": {
+    "division": "Kalaburagi",
+    "ngos": 3,
+    "donors": 2,
+    "volunteers": 1,
+    "mealCapacity": 595,
+    "activeRescues": 1
+  },
+  "Bidar": {
+    "division": "Kalaburagi",
+    "ngos": 3,
+    "donors": 2,
+    "volunteers": 1,
+    "mealCapacity": 595,
+    "activeRescues": 1
+  },
+  "Raichur": {
+    "division": "Kalaburagi",
+    "ngos": 3,
+    "donors": 2,
+    "volunteers": 1,
+    "mealCapacity": 595,
+    "activeRescues": 1
+  },
+  "Koppal": {
+    "division": "Kalaburagi",
+    "ngos": 3,
+    "donors": 2,
+    "volunteers": 1,
+    "mealCapacity": 595,
+    "activeRescues": 1
+  },
+  "Yadgir": {
+    "division": "Kalaburagi",
+    "ngos": 3,
+    "donors": 2,
+    "volunteers": 1,
+    "mealCapacity": 595,
+    "activeRescues": 1
+  }
+}

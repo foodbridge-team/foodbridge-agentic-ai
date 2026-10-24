@@ -1,0 +1,219 @@
+[
+  {
+    "district": "Bengaluru Urban",
+    "division": "Bengaluru",
+    "headquarters": "Bengaluru",
+    "lat": 12.9716,
+    "lng": 77.5946
+  },
+  {
+    "district": "Bengaluru Rural",
+    "division": "Bengaluru",
+    "headquarters": "Doddaballapura",
+    "lat": 13.2944,
+    "lng": 77.5457
+  },
+  {
+    "district": "Ramanagara",
+    "division": "Bengaluru",
+    "headquarters": "Ramanagara",
+    "lat": 12.7209,
+    "lng": 77.2799
+  },
+  {
+    "district": "Chikkaballapura",
+    "division": "Bengaluru",
+    "headquarters": "Chikkaballapura",
+    "lat": 13.4325,
+    "lng": 77.7275
+  },
+  {
+    "district": "Kolar",
+    "division": "Bengaluru",
+    "headquarters": "Kolar",
+    "lat": 13.1367,
+    "lng": 78.1291
+  },
+  {
+    "district": "Tumakuru",
+    "division": "Bengaluru",
+    "headquarters": "Tumakuru",
+    "lat": 13.3379,
+    "lng": 77.1173
+  },
+  {
+    "district": "Chitradurga",
+    "division": "Bengaluru",
+    "headquarters": "Chitradurga",
+    "lat": 14.2251,
+    "lng": 76.398
+  },
+  {
+    "district": "Davanagere",
+    "division": "Bengaluru",
+    "headquarters": "Davanagere",
+    "lat": 14.4644,
+    "lng": 75.9218
+  },
+  {
+    "district": "Shivamogga",
+    "division": "Bengaluru",
+    "headquarters": "Shivamogga",
+    "lat": 13.9299,
+    "lng": 75.5681
+  },
+  {
+    "district": "Mysuru",
+    "division": "Mysuru",
+    "headquarters": "Mysuru",
+    "lat": 12.2958,
+    "lng": 76.6394
+  },
+  {
+    "district": "Mandya",
+    "division": "Mysuru",
+    "headquarters": "Mandya",
+    "lat": 12.5244,
+    "lng": 76.8958
+  },
+  {
+    "district": "Hassan",
+    "division": "Mysuru",
+    "headquarters": "Hassan",
+    "lat": 13.0033,
+    "lng": 76.1004
+  },
+  {
+    "district": "Chamarajanagar",
+    "division": "Mysuru",
+    "headquarters": "Chamarajanagar",
+    "lat": 11.9261,
+    "lng": 76.9437
+  },
+  {
+    "district": "Chikkamagaluru",
+    "division": "Mysuru",
+    "headquarters": "Chikkamagaluru",
+    "lat": 13.3161,
+    "lng": 75.772
+  },
+  {
+    "district": "Kodagu",
+    "division": "Mysuru",
+    "headquarters": "Madikeri",
+    "lat": 12.4244,
+    "lng": 75.7382
+  },
+  {
+    "district": "Dakshina Kannada",
+    "division": "Mysuru",
+    "headquarters": "Mangaluru",
+    "lat": 12.9141,
+    "lng": 74.856
+  },
+  {
+    "district": "Udupi",
+    "division": "Mysuru",
+    "headquarters": "Udupi",
+    "lat": 13.3409,
+    "lng": 74.7421
+  },
+  {
+    "district": "Belagavi",
+    "division": "Belagavi",
+    "headquarters": "Belagavi",
+    "lat": 15.8497,
+    "lng": 74.4977
+  },
+  {
+    "district": "Dharwad",
+    "division": "Belagavi",
+    "headquarters": "Hubballi-Dharwad",
+    "lat": 15.3647,
+    "lng": 75.124
+  },
+  {
+    "district": "Vijayapura",
+    "division": "Belagavi",
+    "headquarters": "Vijayapura",
+    "lat": 16.8302,
+    "lng": 75.71
+  },
+  {
+    "district": "Bagalkote",
+    "division": "Belagavi",
+    "headquarters": "Bagalkote",
+    "lat": 16.1817,
+    "lng": 75.6958
+  },
+  {
+    "district": "Gadag",
+    "division": "Belagavi",
+    "headquarters": "Gadag",
+    "lat": 15.4167,
+    "lng": 75.6333
+  },
+  {
+    "district": "Haveri",
+    "division": "Belagavi",
+    "headquarters": "Haveri",
+    "lat": 14.7951,
+    "lng": 75.4026
+  },
+  {
+    "district": "Uttara Kannada",
+    "division": "Belagavi",
+    "headquarters": "Karwar",
+    "lat": 14.8136,
+    "lng": 74.1298
+  },
+  {
+    "district": "Kalaburagi",
+    "division": "Kalaburagi",
+    "headquarters": "Kalaburagi",
+    "lat": 17.3297,
+    "lng": 76.8343
+  },
+  {
+    "district": "Ballari",
+    "division": "Kalaburagi",
+    "headquarters": "Ballari",
+    "lat": 15.1394,
+    "lng": 76.9214
+  },
+  {
+    "district": "Vijayanagara",
+    "division": "Kalaburagi",
+    "headquarters": "Hosapete",
+    "lat": 15.2689,
+    "lng": 76.3909
+  },
+  {
+    "district": "Bidar",
+    "division": "Kalaburagi",
+    "headquarters": "Bidar",
+    "lat": 17.9104,
+    "lng": 77.5199
+  },
+  {
+    "district": "Raichur",
+    "division": "Kalaburagi",
+    "headquarters": "Raichur",
+    "lat": 16.212,
+    "lng": 77.3439
+  },
+  {
+    "district": "Koppal",
+    "division": "Kalaburagi",
+    "headquarters": "Koppal",
+    "lat": 15.3467,
+    "lng": 76.1554
+  },
+  {
+    "district": "Yadgir",
+    "division": "Kalaburagi",
+    "headquarters": "Yadgir",
+    "lat": 16.7644,
+    "lng": 77.1378
+  }
+]

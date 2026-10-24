@@ -194,6 +194,8 @@ function renderOperationsStream() {
 
       const timeAgo = formatTimeAgo(d.createdAt);
       const hasPhotoProof = Boolean(d.photoUrl);
+      const isKn = window.foodBridgeLanguage?.() === "kn";
+      const displayTitle = (isKn && d.titleKn) ? d.titleKn : d.title;
 
       return `
         <div class="ops-activity-card" id="ops-card-${escapeHtml(d.id)}">
@@ -201,9 +203,10 @@ function renderOperationsStream() {
             <div class="ops-header-left">
               <span class="ops-category-icon" aria-hidden="true">${catIcon}</span>
               <div>
-                <div class="ops-food-title">${escapeHtml(d.title)}</div>
+                <div class="ops-food-title">${escapeHtml(displayTitle)}</div>
                 <div class="ops-food-meta">
                   <span>ID: <strong>${escapeHtml(d.id)}</strong></span> ·
+                  ${d.district ? `<span>📍 <strong>${escapeHtml(d.district)}</strong></span> ·` : ""}
                   <span>🍲 <strong>${Number(d.quantity)} portions</strong></span> ·
                   <span>🕒 Listed ${timeAgo}</span>
                 </div>
@@ -351,6 +354,17 @@ async function fetchAdminData() {
     document.getElementById("kpiPendingCount").textContent = pending.length;
     document.getElementById("kpiApprovedDonors").textContent = data.approvedCount || 0;
 
+    try {
+      const statsRes = await fetch("/api/stats");
+      const stats = await statsRes.json();
+      if (document.getElementById("kpiVerifiedNgos")) {
+        document.getElementById("kpiVerifiedNgos").textContent = stats.verifiedNgos || 0;
+      }
+      if (document.getElementById("kpiLedgerIntegrity")) {
+        document.getElementById("kpiLedgerIntegrity").textContent = stats.ledgerIntegrity ? "100% OK" : "Compromised";
+      }
+    } catch (_) {}
+
     if (!container) return;
 
     if (pending.length === 0) {
@@ -459,6 +473,7 @@ async function fetchUsers() {
           <span style="font-size:0.75rem;color:var(--text-dim)">${escapeHtml(u.email)}</span>
         </td>
         <td><span class="applicant-role-tag">${escapeHtml(u.role)}</span></td>
+        <td><span class="stat-pill text-cyan">📍 ${escapeHtml(u.district || "Dakshina Kannada")}</span></td>
         <td>${escapeHtml(u.phone || "—")}</td>
         <td>
           <span class="status-badge ${u.verification === "APPROVED" ? "status-DELIVERED" : u.verification === "PENDING" ? "status-RESERVED" : "status-CANCELLED"}">

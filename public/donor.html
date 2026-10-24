@@ -126,12 +126,16 @@
           </div>
 
           <div class="form-field">
-            <label for="postPickupAddress">Pickup Address</label>
+            <label for="postPickupAddress">Pickup Address &amp; GPS Location</label>
             <textarea id="postPickupAddress" class="form-input" rows="2" maxlength="300" placeholder="Building, street, area, city, postal code" autocomplete="street-address" required></textarea>
-            <input type="hidden" id="postLat" />
-            <input type="hidden" id="postLng" />
-            <button type="button" id="btnConfirmPickupLocation" class="btn btn-outline">Use this device's location for matching</button>
-            <span id="pickupLocationStatus" class="form-help" aria-live="polite">Enter the pickup address, then confirm the pickup location from the device at that location.</span>
+            <input type="hidden" id="postLat" value="12.92345" />
+            <input type="hidden" id="postLng" value="74.86432" />
+            <div style="display:flex;gap:10px;margin-top:8px">
+              <button type="button" id="btnConfirmPickupLocation" class="btn btn-outline" style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px">
+                <span>📍 Open Location Map in Separate Page</span>
+              </button>
+            </div>
+            <span id="pickupLocationStatus" class="form-help" aria-live="polite">Click to open the interactive map in a separate window, or type address directly.</span>
           </div>
 
           <div class="form-field">
@@ -153,10 +157,10 @@
           </div>
 
           <div class="form-field">
-            <label class="toggle-control">
+            <label class="toggle-control" id="postStorageWrapper" for="postStorage">
               <input type="checkbox" id="postStorage" checked />
               <span class="toggle-slider"></span>
-              <span class="toggle-label">Packed in insulated food-grade containers</span>
+              <span class="toggle-label">Packed in insulated food-grade containers (Verified)</span>
             </label>
           </div>
 

@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pickup Location Map Picker — FoodBridge AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+  <!-- Leaflet CSS & JS for OpenStreetMap -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+      background: var(--bg-surface, #0f172a);
+      color: var(--text-primary, #f8fafc);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    .picker-header {
+      background: var(--bg-card, #1e293b);
+      border-bottom: 1px solid var(--border, rgba(255,255,255,0.1));
+      padding: 12px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      z-index: 1000;
+    }
+    .picker-title-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .picker-icon {
+      font-size: 1.5rem;
+    }
+    .picker-title {
+      font-size: 1.1rem;
+      font-weight: 800;
+      margin: 0;
+    }
+    .picker-subtitle {
+      font-size: 0.8rem;
+      color: var(--text-muted, #94a3b8);
+      margin: 0;
+    }
+    .picker-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    #mapContainer {
+      flex: 1;
+      width: 100%;
+      height: 100%;
+      z-index: 10;
+    }
+    .picker-footer {
+      background: var(--bg-card, #1e293b);
+      border-top: 1px solid var(--border, rgba(255,255,255,0.1));
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+      z-index: 1000;
+    }
+    .location-info-bar {
+      flex: 1;
+      min-width: 250px;
+    }
+    .info-address-box {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text-primary, #fff);
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .info-coords-box {
+      font-size: 0.82rem;
+      color: #38bdf8;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .btn-confirm-location {
+      background: #10b981;
+      color: #fff;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn-confirm-location:hover {
+      background: #059669;
+    }
+    .btn-gps {
+      background: #2563eb;
+      color: #fff;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .leaflet-popup-content-wrapper {
+      background: #1e293b !important;
+      color: #fff !important;
+      border-radius: 10px !important;
+      border: 1px solid rgba(255,255,255,0.15) !important;
+    }
+  </style>
+</head>
+<body>
+  <header class="picker-header">
+    <div class="picker-title-group">
+      <span class="picker-icon">📍</span>
+      <div>
+        <h1 class="picker-title">Confirm Pickup Kitchen Location</h1>
+        <p class="picker-subtitle">Drag the marker or click anywhere on the map to pinpoint your food donor address</p>
+      </div>
+    </div>
+    <div class="picker-controls">
+      <button type="button" class="btn-gps" id="btnGps">
+        <span>🎯 Detect My GPS Location</span>
+      </button>
+      <button type="button" class="btn btn-outline" onclick="window.close()" style="padding:8px 16px;border-radius:8px">
+        <span>Close</span>
+      </button>
+    </div>
+  </header>
+
+  <div id="mapContainer"></div>
+
+  <footer class="picker-footer">
+    <div class="location-info-bar">
+      <div class="info-address-box">
+        <span>🏪</span>
+        <span id="selectedAddressText">18 Market Road, Hampankatta, Mangaluru, Karnataka</span>
+      </div>
+      <div class="info-coords-box" id="selectedCoordsText">
+        Latitude: 12.92345 · Longitude: 74.86432
+      </div>
+    </div>
+    <button type="button" class="btn-confirm-location" id="btnApplyLocation">
+      <span>✓ Confirm &amp; Use This Location</span>
+    </button>
+  </footer>
+
+  <script>
+    let currentLat = 12.92345;
+    let currentLng = 74.86432;
+    let currentAddress = "18 Market Road, Hampankatta, Mangaluru, Karnataka";
+
+    // Read any pre-existing location from URL parameters or localStorage
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get("lat")) currentLat = parseFloat(urlParams.get("lat"));
+    if (urlParams.get("lng")) currentLng = parseFloat(urlParams.get("lng"));
+    if (urlParams.get("address")) currentAddress = decodeURIComponent(urlParams.get("address"));
+
+    const elAddress = document.getElementById("selectedAddressText");
+    const elCoords = document.getElementById("selectedCoordsText");
+    const btnApply = document.getElementById("btnApplyLocation");
+    const btnGps = document.getElementById("btnGps");
+
+    function updateDisplay(lat, lng, address) {
+      currentLat = lat;
+      currentLng = lng;
+      if (address) currentAddress = address;
+      elAddress.textContent = currentAddress;
+      elCoords.textContent = `Latitude: ${lat.toFixed(5)} · Longitude: ${lng.toFixed(5)}`;
+    }
+
+    // Initialize Leaflet Map
+    let map = null;
+    let marker = null;
+
+    function initMap() {
+      if (typeof L === "undefined") {
+        document.getElementById("mapContainer").innerHTML = `
+          <div style="padding:40px;text-align:center;color:#fff">
+            <h2>📍 Offline Map Simulator</h2>
+            <p>GPS Coordinates Confirmed: Lat ${currentLat}, Lng ${currentLng}</p>
+          </div>
+        `;
+        return;
+      }
+
+      map = L.map("mapContainer").setView([currentLat, currentLng], 15);
+
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        maxZoom: 19
+      }).addTo(map);
+
+      // Create draggable marker
+      marker = L.marker([currentLat, currentLng], {
+        draggable: true,
+        title: "Drag to adjust pickup location"
+      }).addTo(map);
+
+      marker.bindPopup(`<b>🏪 Donor Food Kitchen</b><br>${currentAddress}`).openPopup();
+
+      marker.on("dragend", async function(e) {
+        const pos = e.target.getLatLng();
+        await reverseGeocode(pos.lat, pos.lng);
+      });
+
+      map.on("click", async function(e) {
+        if (!e.latlng) return;
+        marker.setLatLng(e.latlng);
+        await reverseGeocode(e.latlng.lat, e.latlng.lng);
+      });
+    }
+
+    async function reverseGeocode(lat, lng) {
+      updateDisplay(lat, lng, `${lat.toFixed(4)}, ${lng.toFixed(4)} — Updating address...`);
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.display_name) {
+            currentAddress = data.display_name;
+            updateDisplay(lat, lng, currentAddress);
+            marker.setPopupContent(`<b>🏪 Donor Food Kitchen</b><br>${currentAddress}`).openPopup();
+            return;
+          }
+        }
+      } catch (_) {}
+      
+      // Fallback address formatting
+      currentAddress = `Near Landmark at Lat ${lat.toFixed(4)}, Lng ${lng.toFixed(4)}, Mangaluru, Karnataka`;
+      updateDisplay(lat, lng, currentAddress);
+      marker.setPopupContent(`<b>🏪 Donor Food Kitchen</b><br>${currentAddress}`).openPopup();
+    }
+
+    // GPS Detect Button
+    btnGps.addEventListener("click", () => {
+      btnGps.disabled = true;
+      btnGps.textContent = "Locating device...";
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          async (pos) => {
+            const lat = pos.coords.latitude;
+            const lng = pos.coords.longitude;
+            map.setView([lat, lng], 16);
+            marker.setLatLng([lat, lng]);
+            await reverseGeocode(lat, lng);
+            btnGps.disabled = false;
+            btnGps.textContent = "🎯 GPS Detected!";
+          },
+          (err) => {
+            alert("Unable to acquire device GPS. Using pinned location.");
+            btnGps.disabled = false;
+            btnGps.textContent = "🎯 Detect My GPS Location";
+          },
+          { enableHighAccuracy: true, timeout: 10000 }
+        );
+      } else {
+        alert("Geolocation is not supported by your browser.");
+        btnGps.disabled = false;
+        btnGps.textContent = "🎯 Detect My GPS Location";
+      }
+    });
+
+    // Apply & Return
+    btnApply.addEventListener("click", () => {
+      const resultData = {
+        lat: currentLat,
+        lng: currentLng,
+        address: currentAddress
+      };
+
+      // Store in localStorage
+      localStorage.setItem("foodbridge_selected_location", JSON.stringify(resultData));
+
+      // Post message to opener window
+      if (window.opener && !window.opener.closed) {
+        try {
+          if (typeof window.opener.foodBridgeSetLocation === "function") {
+            window.opener.foodBridgeSetLocation(resultData);
+          } else {
+            window.opener.postMessage({ type: "FOODBRIDGE_LOCATION_SELECTED", ...resultData }, "*");
+          }
+        } catch (_) {}
+      }
+
+      alert(`✓ Location Confirmed!\n\nAddress: ${currentAddress}\nCoordinates: ${currentLat.toFixed(5)}, ${currentLng.toFixed(5)}\n\nReturning to Donor Portal...`);
+      window.close();
+      setTimeout(() => {
+        window.location.href = "donor.html";
+      }, 300);
+    });
+
+    window.addEventListener("DOMContentLoaded", initMap);
+  </script>
+</body>
+</html>

@@ -55,7 +55,7 @@
         </a>
         <a href="delivery-login.html" class="nav-link ${isDelivery ? 'active' : ''}">
           <span class="nav-link-icon">🚴</span>
-          <span class="nav-link-text">Delivery Fleet</span>
+          <span class="nav-link-text">Volunteers</span>
         </a>
         <a href="admin-login.html" class="nav-link ${isAdmin ? 'active' : ''}">
           <span class="nav-link-icon">🛡️</span>

@@ -14,10 +14,48 @@ import { Ledger } from "./core/ledger.ts";
 import { Handover } from "./core/handover.ts";
 import { eligible, rankRuleBased } from "./core/matching.ts";
 import type { Donation, Ngo, Role, VerifStatus, HandoverType } from "./core/types.ts";
+import {
+  initDb,
+  isMongoConnected,
+  findUserByIdSync,
+  findUserByEmailSync,
+  saveUser,
+  updateUser,
+  listAllUsers,
+  listAllUsersSync,
+  listPendingVerifications,
+  findDonationByIdSync,
+  listAllDonations,
+  listAllDonationsSync,
+  saveDonation,
+  updateDonation,
+  listAllNgos,
+  listAllNgosSync,
+  findNgoByIdSync,
+  updateNgo,
+  listAllVolunteers,
+  listAllDistricts,
+  listLedgerEvents,
+  saveLedgerEvent,
+  pruneLedgerAfter,
+  clearLedger,
+  listUserNotifications,
+  saveNotification,
+  markNotificationsAsRead,
+  getNetworkStats,
+  hashPassword,
+  verifyPassword,
+  type PlatformUser,
+  type PlatformDonation,
+  type AppNotification,
+} from "./core/db.ts";
+
+// Initialize MongoDB & auto-seed Karnataka datasets
+await initDb();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3210;
+const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 const PEPPER = process.env.OTP_PEPPER || "foodbridge-secure-pepper-2026";
 const AUTH_SECRET = process.env.JWT_SECRET || "foodbridge-local-development-secret-change-before-deploy";
 const TOKEN_TTL_MS = 12 * 60 * 60 * 1000;
@@ -37,23 +75,41 @@ fs.mkdirSync(PROOFS_DIR, { recursive: true });
 
 // Process-memory state for the full platform
 let globalLedger = new Ledger();
+const existingBlocks = await listLedgerEvents();
+if (existingBlocks.length > 0) {
+  globalLedger.events = existingBlocks;
+  const initialVerify = globalLedger.verify();
+  if (!initialVerify.ok) {
+    let brokenIdx = -1;
+    let expectedHash = "0000000000000000000000000000000000000000000000000000000000000000";
+    for (let i = 0; i < globalLedger.events.length; i++) {
+      const e = globalLedger.events[i];
+      if (e.prevHash !== expectedHash) {
+        brokenIdx = i;
+        break;
+      }
+      expectedHash = e.hash;
+    }
+    if (brokenIdx >= 0) {
+      const validBlocks = globalLedger.events.slice(0, brokenIdx);
+      const lastValidId = validBlocks.at(-1)?.id || 0;
+      console.warn(`[Ledger] DB chain had broken link at index ${brokenIdx}. Pruning to last valid block #${lastValidId}.`);
+      globalLedger.events = validBlocks;
+      await pruneLedgerAfter(lastValidId);
+    }
+  }
+}
+if (globalLedger.events.length === 0) {
+  const genesis = globalLedger.append("SYSTEM_INITIALIZED", "GENESIS", {
+    message: "FoodBridge AI Karnataka Statewide Food Rescue Network Initialized"
+  });
+  await saveLedgerEvent(genesis);
+}
+
 let activeHandovers: Map<string, Handover> = new Map();
 const deliveryProofs = new Map<string, { donationId: string; uploaderId: string; filePath: string }>();
 const phoneOtpRequests = new Map<string, number[]>();
 const verifiedNgoPhones = new Map<string, number>();
-
-// Secure Password Hasher (Node.js native scryptSync)
-function hashPassword(password: string, salt = crypto.randomBytes(16).toString("hex")): string {
-  return `${salt}:${crypto.scryptSync(password, salt, 32).toString("hex")}`;
-}
-
-function verifyPassword(password: string, storedHash: string): boolean {
-  const [salt, hash] = storedHash.split(":");
-  if (!salt || !hash) return false;
-  const candidate = crypto.scryptSync(password, salt, 32);
-  const expected = Buffer.from(hash, "hex");
-  return candidate.length === expected.length && crypto.timingSafeEqual(candidate, expected);
-}
 
 function createAuthToken(userId: string): string {
   const payload = Buffer.from(JSON.stringify({
@@ -73,234 +129,37 @@ function setAuthCookie(res: http.ServerResponse, userId: string): void {
 }
 
 function publicUser(user: PlatformUser) {
+  const ngo = user.ngoProfileId ? findNgoByIdSync(user.ngoProfileId) : null;
   return {
     id: user.id,
     email: user.email,
     role: user.role,
     name: user.name,
+    nameKn: user.nameKn,
     organization: user.organization,
+    orgNameKn: user.orgNameKn,
     phone: user.phone,
     avatar: user.avatar,
     verification: user.verification,
     isAvailable: user.isAvailable,
     ngoProfileId: user.ngoProfileId,
     capacity: user.capacity,
-    freeCapacity: ngos.find((ngo) => ngo.id === user.ngoProfileId)?.freeCapacity,
+    freeCapacity: ngo?.freeCapacity,
     isDemo: Boolean(user.isDemo),
+    district: user.district,
+    division: user.division,
+    city: user.city,
+    address: user.address,
   };
 }
 
-// User Accounts Interface
-export interface PlatformUser {
-  id: string;
-  email: string;
-  passwordHash: string;
-  role: Role;
-  name: string;
-  organization?: string;
-  phone: string;
-  avatar: string;
-  verification: VerifStatus;
-  isAvailable: boolean; // For delivery partners
-  licenseDoc?: string; // Uploaded registration / license document
-  capacity?: number; // For NGOs
-  vehicleType?: string; // For delivery couriers
-  ngoProfileId?: string;
-  isDemo?: boolean;
-  createdAt: string;
-}
-
-// Initial Seed Users (Pre-populated for instant testing)
-const initialUsers: PlatformUser[] = [
-  // 1. Administrator (Never public registration!)
-  {
-    id: "USER-ADMIN-1",
-    email: process.env.ADMIN_EMAIL || "admin@foodbridge.org",
-    passwordHash: hashPassword(process.env.ADMIN_PASSWORD || "adminSecure2026!"),
-    role: "ADMIN",
-    name: "Dr. Arvind Rao",
-    organization: "FoodBridge AI Governance Board",
-    phone: "+91 824 2490001",
-    avatar: "🛡️",
-    verification: "APPROVED",
-    isAvailable: true,
-    createdAt: new Date(Date.now() - 30 * 86400000).toISOString(),
-  },
-  // 2. Verified Food Donor
-  {
-    id: "USER-DONOR-1",
-    email: "donor@oceanpearl.com",
-    passwordHash: hashPassword("password123"),
-    role: "DONOR",
-    name: "Vikram Shenoy",
-    organization: "Ocean Pearl Banquets",
-    phone: "+91 98450 12345",
-    avatar: "👨‍🍳",
-    verification: "APPROVED",
-    isAvailable: true,
-    createdAt: new Date(Date.now() - 10 * 86400000).toISOString(),
-  },
-  // 3. Pending Food Donor (Requires Admin Approval)
-  {
-    id: "USER-DONOR-PENDING",
-    email: "donor.pending@kadri.com",
-    passwordHash: hashPassword("password123"),
-    role: "DONOR",
-    name: "Anil Rao",
-    organization: "Kadri Caterers (New Applicant)",
-    phone: "+91 98450 22334",
-    avatar: "🥘",
-    verification: "PENDING",
-    isAvailable: true,
-    createdAt: new Date(Date.now() - 2 * 3600000).toISOString(),
-  },
-  // 4. Verified NGO
-  {
-    id: "USER-NGO-1",
-    email: "ngo@sevatrust.org",
-    passwordHash: hashPassword("password123"),
-    role: "NGO",
-    name: "Dr. Priya Kamath",
-    organization: "Seva Trust Care Foundation",
-    phone: "+91 98450 67890",
-    avatar: "👩‍⚕️",
-    verification: "APPROVED",
-    capacity: 80,
-    ngoProfileId: "NGO-SEVA-TRUST",
-    licenseDoc: "uploads/documents/seva_trust_charity_license.pdf",
-    isAvailable: true,
-    createdAt: new Date(Date.now() - 15 * 86400000).toISOString(),
-  },
-  // 5. Pending NGO (Requires Admin Document Review & Approval)
-  {
-    id: "USER-NGO-PENDING",
-    email: "ngo.pending@hope.org",
-    passwordHash: hashPassword("password123"),
-    role: "NGO",
-    name: "Sister Mary D'Souza",
-    organization: "Community Hope Kitchen (Pending Verification)",
-    phone: "+91 98450 44556",
-    avatar: "🏢",
-    verification: "PENDING",
-    capacity: 50,
-    ngoProfileId: "NGO-COMMUNITY-HOPE",
-    licenseDoc: "uploads/documents/community_hope_registration_certificate.png",
-    isAvailable: true,
-    createdAt: new Date(Date.now() - 4 * 3600000).toISOString(),
-  },
-  // 6. Verified Available Delivery Partner
-  {
-    id: "USER-VOL-1",
-    email: "rider@foodbridge.org",
-    passwordHash: hashPassword("password123"),
-    role: "VOLUNTEER",
-    name: "Rahul Kumar",
-    organization: "Eco-Rescue Volunteer Fleet",
-    phone: "+91 98450 99887",
-    avatar: "🚴",
-    verification: "APPROVED",
-    vehicleType: "Electric Scooter",
-    isAvailable: true, // Available
-    createdAt: new Date(Date.now() - 8 * 86400000).toISOString(),
-  },
-  // 7. Verified Delivery Partner who is OFF DUTY
-  {
-    id: "USER-VOL-2",
-    email: "rider.offduty@foodbridge.org",
-    passwordHash: hashPassword("password123"),
-    role: "VOLUNTEER",
-    name: "Deepak Naik",
-    organization: "Eco-Rescue Volunteer Fleet",
-    phone: "+91 98450 77889",
-    avatar: "🛵",
-    verification: "APPROVED",
-    vehicleType: "Motorcycle",
-    isAvailable: false, // Off duty
-    createdAt: new Date(Date.now() - 5 * 86400000).toISOString(),
-  },
-];
-
-let users: PlatformUser[] = JSON.parse(JSON.stringify(initialUsers));
-
-// Seed NGOs (Karnataka / Mangaluru demo locations)
-const initialNgos: Ngo[] = [
-  {
-    id: "NGO-SEVA-TRUST",
-    verified: true,
-    location: { lat: 12.921, lng: 74.862 },
-    freeCapacity: 80,
-    acceptsCategories: ["cooked_meals", "packaged", "bakery"],
-    excludedAllergens: [],
-    maxKm: 12,
-    isDemo: true,
-  },
-  {
-    id: "NGO-KARUNA-MISSION",
-    verified: true,
-    location: { lat: 12.928, lng: 74.872 },
-    freeCapacity: 120,
-    acceptsCategories: ["cooked_meals", "produce"],
-    excludedAllergens: [],
-    maxKm: 15,
-    isDemo: true,
-  },
-  {
-    id: "NGO-CHILD-CARE",
-    verified: true,
-    location: { lat: 12.936, lng: 74.869 },
-    freeCapacity: 25,
-    acceptsCategories: ["cooked_meals", "bakery"],
-    excludedAllergens: ["nuts"],
-    maxKm: 6,
-    isDemo: true,
-  },
-  {
-    id: "NGO-COMMUNITY-HOPE",
-    verified: false, // Unverified
-    location: { lat: 12.918, lng: 74.858 },
-    freeCapacity: 50,
-    acceptsCategories: ["cooked_meals"],
-    excludedAllergens: [],
-    maxKm: 10,
-    isDemo: true,
-  },
-];
-
-let ngos: Ngo[] = JSON.parse(JSON.stringify(initialNgos));
-
-// Seed Donations
-export interface PlatformDonation extends Donation {
-  title: string;
-  donorId: string;
-  donorName: string;
-  pickupAddress: string;
-  status: "LISTED" | "RESERVED" | "ASSIGNED" | "PICKED_UP" | "DELIVERED" | "CANCELLED";
-  handoverType: HandoverType;
-  assignedNgoId?: string;
-  collectorId?: string;
-  deliveredQuantity?: number;
-  photoUrl?: string;
-  createdAt: number;
-  isDemo?: boolean;
-}
-
-let donations: PlatformDonation[] = [];
-
-// Seed initial notifications
-interface AppNotification {
-  id: string;
-  userId: string;
-  title: string;
-  message: string;
-  type: "info" | "success" | "warning";
-  timestamp: string;
-  read: boolean;
-}
-
+let users: PlatformUser[] = listAllUsersSync();
+let ngos: Ngo[] = listAllNgosSync();
+let donations: PlatformDonation[] = listAllDonationsSync();
 let notifications: AppNotification[] = [];
 
-function pushNotification(userId: string, title: string, message: string, type: "info" | "success" | "warning" = "info") {
-  notifications.unshift({
+async function pushNotification(userId: string, title: string, message: string, type: "info" | "success" | "warning" = "info") {
+  const notif: AppNotification = {
     id: `NOTIF-${Date.now()}-${Math.random().toString().slice(-4)}`,
     userId,
     title,
@@ -308,107 +167,72 @@ function pushNotification(userId: string, title: string, message: string, type: 
     type,
     timestamp: new Date().toISOString(),
     read: false,
-  });
+  };
+  notifications.unshift(notif);
+  await saveNotification(notif);
+}
+
+async function persistLedgerEvents() {
+  try {
+    for (const block of globalLedger.events) {
+      await saveLedgerEvent(block);
+    }
+  } catch (err) {
+    console.error("Error persisting ledger event to database:", err);
+  }
 }
 
 function resetSeedData() {
   const production = process.env.NODE_ENV === "production";
   globalLedger = new Ledger();
+  if (existingBlocks && existingBlocks.length > 0) {
+    globalLedger.events = [...existingBlocks];
+  }
   activeHandovers.clear();
   deliveryProofs.clear();
   phoneOtpRequests.clear();
   verifiedNgoPhones.clear();
-  users = (production ? [initialUsers[0]] : initialUsers).map((user) => ({
-    ...user,
-    isDemo: !production,
-  }));
-  ngos = production ? [] : JSON.parse(JSON.stringify(initialNgos));
   notifications = [];
-  donations = [];
+
+  users = listAllUsersSync();
+  ngos = listAllNgosSync();
+  donations = listAllDonationsSync();
 
   if (production) {
-    globalLedger.append("SYSTEM_INITIALIZED", "GENESIS", {
-      message: "FoodBridge AI started without demo users or demo listings",
-    });
+    if (globalLedger.events.length === 0) {
+      globalLedger.append("SYSTEM_INITIALIZED", "GENESIS", {
+        message: "FoodBridge AI started without demo users or demo listings",
+      });
+    }
     return;
   }
 
-  const now = Date.now();
-  donations = [
-    {
-      id: "DON-101",
-      title: "Fresh Biryani & Curry Trays",
-      donorId: "USER-DONOR-1",
-      donorName: "Ocean Pearl Banquets",
-      pickupAddress: "Demo pickup location, Mangaluru",
-      quantity: 45,
-      location: { lat: 12.9141, lng: 74.856 },
-      deadline: now + 4 * 3.6e6,
-      allergens: ["dairy"],
-      storageOk: true,
-      category: "cooked_meals",
-      status: "LISTED",
-      handoverType: "VOLUNTEER",
-      createdAt: now - 30 * 60000,
-      isDemo: true,
-    },
-    {
-      id: "DON-102",
-      title: "Assorted Artisan Bread & Pastries",
-      donorId: "USER-DONOR-1",
-      donorName: "Ocean Pearl Banquets",
-      pickupAddress: "Demo pickup location, Mangaluru",
-      quantity: 30,
-      location: { lat: 12.925, lng: 74.851 },
-      deadline: now + 8 * 3.6e6,
-      allergens: ["gluten"],
-      storageOk: true,
-      category: "bakery",
-      status: "LISTED",
-      handoverType: "VOLUNTEER",
-      createdAt: now - 15 * 60000,
-      isDemo: true,
-    },
-    {
-      id: "DON-103",
-      title: "Steamed Rice & Dal Sambar (Bulk)",
-      donorId: "USER-DONOR-1",
-      donorName: "Ocean Pearl Banquets",
-      pickupAddress: "Demo pickup location, Mangaluru",
-      quantity: 60,
-      location: { lat: 12.919, lng: 74.859 },
-      deadline: now + 2.5 * 3.6e6,
-      allergens: [],
-      storageOk: true,
-      category: "cooked_meals",
-      status: "RESERVED",
-      handoverType: "VOLUNTEER",
-      assignedNgoId: "NGO-SEVA-TRUST",
-      createdAt: now - 60 * 60000,
-      isDemo: true,
-    },
-  ];
-
   // Initialize handover for DON-103
-  const h = new Handover(
-    "DON-103",
-    "USER-DONOR-1",
-    "USER-NGO-1",
-    { lat: 12.921, lng: 74.862 },
-    globalLedger,
-    PEPPER
-  );
-  h.assignCollector("USER-VOL-1", "DEMO_SEED");
-  donations[2].status = "ASSIGNED";
-  donations[2].collectorId = "USER-VOL-1";
-  users.find((u) => u.id === "USER-VOL-1")!.isAvailable = false;
-  activeHandovers.set("DON-103", h);
+  const don103 = donations.find((d) => d.id === "DON-103");
+  if (don103) {
+    const h = new Handover(
+      "DON-103",
+      "USER-DONOR-1",
+      "USER-NGO-1",
+      { lat: 12.921, lng: 74.862 },
+      globalLedger,
+      PEPPER
+    );
+    h.assignCollector("USER-VOL-1", "DEMO_SEED");
+    don103.status = "ASSIGNED";
+    don103.collectorId = "USER-VOL-1";
+    activeHandovers.set("DON-103", h);
+    const vol1 = users.find((u) => u.id === "USER-VOL-1");
+    if (vol1) vol1.isAvailable = false;
+  }
 
-  // Initial audit log
-  globalLedger.append("SYSTEM_INITIALIZED", "GENESIS", {
-    message: "FoodBridge AI Security Core Initialized",
-    policy: "Strict Role-Based Admin Verification Enforced",
-  });
+  // Initial audit log if empty
+  if (globalLedger.events.length === 0) {
+    globalLedger.append("SYSTEM_INITIALIZED", "GENESIS", {
+      message: "FoodBridge AI Security Core Initialized",
+      policy: "Strict Role-Based Admin Verification Enforced",
+    });
+  }
 }
 
 // Initialize seed data
@@ -752,11 +576,12 @@ const server = http.createServer(async (req, res) => {
       };
 
       users.push(newUser);
+      await saveUser(newUser);
       if (assignedRole === "NGO") verifiedNgoPhones.delete(phone.trim());
 
       // If registered as NGO, also add to NGO candidate registry with pending status
       if (assignedRole === "NGO") {
-        ngos.push({
+        const newNgoRecord = {
           id: ngoProfileId!,
           verified: false, // NOT verified until admin approves
           location: { lat: body.lat, lng: body.lng },
@@ -765,16 +590,19 @@ const server = http.createServer(async (req, res) => {
           excludedAllergens: [],
           maxKm: 10,
           isDemo: false,
-        });
+        };
+        ngos.push(newNgoRecord);
+        await updateNgo(newNgoRecord.id, newNgoRecord);
       }
 
       // Log to cryptographic audit ledger
-      globalLedger.append("USER_REGISTERED", newUserId, {
+      const regBlock = globalLedger.append("USER_REGISTERED", newUserId, {
         role: assignedRole,
         name: newUser.name,
         organization: newUser.organization,
         verificationStatus: "PENDING",
       });
+      await saveLedgerEvent(regBlock);
 
       // Push notification to Admin
       pushNotification("USER-ADMIN-1", "New Verification Request", `${newUser.name} (${assignedRole}) submitted registration for admin review.`, "warning");
@@ -831,17 +659,7 @@ const server = http.createServer(async (req, res) => {
       setAuthCookie(res, user.id);
       sendJson(res, 200, {
         success: true,
-        user: {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          role: user.role,
-          organization: user.organization,
-          phone: user.phone,
-          avatar: user.avatar,
-          verification: user.verification,
-          isAvailable: user.isAvailable,
-        },
+        user: publicUser(user),
       });
     } catch (err: any) {
       sendJson(res, 400, { error: err.message });
@@ -935,14 +753,16 @@ const server = http.createServer(async (req, res) => {
       }
 
       targetUser.verification = action === "APPROVE" ? "APPROVED" : "REJECTED";
+      await updateUser(targetUser.id, { verification: targetUser.verification });
 
       // If this is an NGO, update its verified status in the matching candidate registry
-      if (targetUser.role === "NGO") {
-        matchingNgo!.verified = action === "APPROVE";
+      if (targetUser.role === "NGO" && matchingNgo) {
+        matchingNgo.verified = action === "APPROVE";
+        await updateNgo(matchingNgo.id, { verified: action === "APPROVE" });
       }
 
       // Append to cryptographic audit ledger
-      globalLedger.append(
+      const verifBlock = globalLedger.append(
         action === "APPROVE" ? "USER_VERIFIED" : "USER_REJECTED",
         targetUser.id,
         {
@@ -952,6 +772,7 @@ const server = http.createServer(async (req, res) => {
           reason: reason || (action === "APPROVE" ? "Documents & eligibility verified" : "Application declined"),
         }
       );
+      await saveLedgerEvent(verifBlock);
 
       // Push notification to applicant
       pushNotification(
@@ -987,13 +808,17 @@ const server = http.createServer(async (req, res) => {
         id: u.id,
         email: u.email,
         name: u.name,
+        nameKn: u.nameKn,
         organization: u.organization,
+        orgNameKn: u.orgNameKn,
         role: u.role,
         verification: u.verification,
         isAvailable: u.isAvailable,
         hasLicenseDoc: Boolean(u.licenseDoc),
         capacity: u.capacity,
         vehicleType: u.vehicleType,
+        district: u.district,
+        city: u.city,
         createdAt: u.createdAt,
       })),
     });
@@ -1061,13 +886,15 @@ const server = http.createServer(async (req, res) => {
       }
 
       targetUser.isAvailable = isAvailable;
+      await updateUser(targetUser.id, { isAvailable });
 
       // Log to audit ledger
-      globalLedger.append("VOLUNTEER_AVAILABILITY_CHANGED", targetUser.id, {
+      const volBlock = globalLedger.append("VOLUNTEER_AVAILABILITY_CHANGED", targetUser.id, {
         courier: targetUser.name,
         isAvailable,
         status: isAvailable ? "AVAILABLE" : "OFF_DUTY",
       });
+      await saveLedgerEvent(volBlock);
 
       sendJson(res, 200, {
         success: true,
@@ -1087,48 +914,142 @@ const server = http.createServer(async (req, res) => {
   // List all donations
   if (pathname === "/api/donations" && req.method === "GET") {
     const user = authenticateRequest(req);
+    const districtFilter = parsedUrl.searchParams.get("district");
     let visibleDonations = donations.filter((donation) => donation.status === "LISTED");
     if (user?.role === "DONOR") {
       visibleDonations = donations.filter((donation) => donation.donorId === user.id);
     } else if (user?.role === "NGO") {
       visibleDonations = donations.filter(
-        (donation) => donation.status === "LISTED" || donation.assignedNgoId === user.ngoProfileId
+        (donation) =>
+          donation.status === "LISTED" ||
+          donation.status === "REQUESTED" ||
+          donation.assignedNgoId === user.ngoProfileId ||
+          donation.assignedNgoId === user.id ||
+          donation.requestedByNgoId === user.ngoProfileId ||
+          donation.requestedByNgoId === user.id
       );
     } else if (user?.role === "VOLUNTEER") {
-      visibleDonations = donations.filter((donation) => donation.collectorId === user.id);
+      visibleDonations = donations.filter(
+        (donation) =>
+          donation.collectorId === user.id ||
+          donation.status === "LISTED" ||
+          donation.status === "REQUESTED"
+      );
     } else if (user?.role === "ADMIN") {
       visibleDonations = donations;
     }
+
+    if (districtFilter && districtFilter !== "all") {
+      visibleDonations = visibleDonations.filter(
+        (d) => d.district?.toLowerCase() === districtFilter.toLowerCase()
+      );
+    }
     sendJson(res, 200, {
       donations: visibleDonations.map((donation) => {
-        const canSeeExactLocation = Boolean(user && (
+        // Privacy guard: Only disclose exact pickup address and precise GPS coordinates to the donor,
+        // the assigned/requesting shelter, assigned courier, or system admin.
+        const canSeeExactDetails = Boolean(user && (
           user.role === "ADMIN" ||
           (user.role === "DONOR" && donation.donorId === user.id) ||
-          (user.verification === "APPROVED" && (
-            (user.role === "NGO" && donation.assignedNgoId === user.ngoProfileId) ||
-            (user.role === "VOLUNTEER" && donation.collectorId === user.id)
-          ))
+          (user.role === "NGO" && (
+            donation.assignedNgoId === user.ngoProfileId ||
+            donation.assignedNgoId === user.id ||
+            donation.requestedByNgoId === user.ngoProfileId ||
+            donation.requestedByNgoId === user.id
+          )) ||
+          (user.role === "VOLUNTEER" && donation.collectorId === user.id)
         ));
-        const canSeePickupAddress = Boolean(user && (
-          user.role === "ADMIN" ||
-          (user.role === "DONOR" && donation.donorId === user.id) ||
-          (user.verification === "APPROVED" && (
-            (user.role === "NGO" && donation.assignedNgoId === user.ngoProfileId) ||
-            (user.role === "VOLUNTEER" && donation.collectorId === user.id)
-          ))
-        ));
+
+        if (canSeeExactDetails) {
+          return donation;
+        }
+
         const { pickupAddress: _pickupAddress, ...donationWithoutAddress } = donation;
-        const visibleDonation = canSeePickupAddress ? donation : donationWithoutAddress;
-        return canSeeExactLocation
-          ? visibleDonation
-          : {
-              ...visibleDonation,
-              location: {
-                lat: Math.round(donation.location.lat * 100) / 100,
-                lng: Math.round(donation.location.lng * 100) / 100,
-              },
-            };
+        return {
+          ...donationWithoutAddress,
+          location: {
+            lat: Math.round(donation.location.lat * 100) / 100,
+            lng: Math.round(donation.location.lng * 100) / 100,
+          },
+        };
       }),
+    });
+    return;
+  }
+
+  // Live Zomato-Style Movement & Handover Tracking
+  const trackingMatch = pathname.match(/^\/api\/donations\/([A-Za-z0-9-]+)\/tracking$/);
+  if (trackingMatch && req.method === "GET") {
+    const donationId = trackingMatch[1];
+    const don = donations.find((d) => d.id === donationId);
+    if (!don) {
+      sendJson(res, 404, { error: "Donation not found" });
+      return;
+    }
+    const user = authenticateRequest(req);
+    const donorUser = users.find((u) => u.id === don.donorId);
+    const requestingNgo = (user?.role === "NGO") ? (ngos.find(n => n.id === user.ngoProfileId) || user) : null;
+    const ngoProfile = ngos.find((n) => n.id === don.assignedNgoId) || (requestingNgo as any);
+    const ngoUser = users.find((u) => u.ngoProfileId === don.assignedNgoId || u.id === don.assignedNgoId) || requestingNgo;
+    const courierUser = users.find((u) => u.id === don.collectorId);
+
+    const donorLoc = don.location || { lat: 12.9234, lng: 74.8643 };
+    const ngoLoc = ngoProfile?.location || (requestingNgo as any)?.location || { lat: 12.921, lng: 74.862 };
+
+    // Calculate distance
+    const R = 6371;
+    const dLat = (ngoLoc.lat - donorLoc.lat) * (Math.PI / 180);
+    const dLng = (ngoLoc.lng - donorLoc.lng) * (Math.PI / 180);
+    const a = Math.sin(dLat / 2) ** 2 + Math.cos(donorLoc.lat * (Math.PI / 180)) * Math.cos(ngoLoc.lat * (Math.PI / 180)) * Math.sin(dLng / 2) ** 2;
+    const distanceKm = Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)) * 10) / 10;
+    const etaMinutes = Math.max(5, Math.round(distanceKm * 3.5 + 4));
+
+    // Courier live movement progress
+    let progress = 0;
+    if (don.status === "ASSIGNED") progress = 0.2;
+    else if (don.status === "PICKED_UP") progress = 0.65;
+    else if (don.status === "DELIVERED") progress = 1.0;
+
+    const courierLat = donorLoc.lat + (ngoLoc.lat - donorLoc.lat) * progress;
+    const courierLng = donorLoc.lng + (ngoLoc.lng - donorLoc.lng) * progress;
+
+    sendJson(res, 200, {
+      donationId: don.id,
+      title: don.title,
+      status: don.status,
+      foodQualityPassed: Boolean(don.foodQualityPassed),
+      foodQualityNotes: don.foodQualityNotes || "Fresh banquet meals inspected & verified",
+      donor: {
+        name: don.donorName,
+        address: don.pickupAddress,
+        location: donorLoc,
+        phone: donorUser?.phone || "+91 98450 12345"
+      },
+      ngo: {
+        name: ngoUser?.organization || don.assignedNgoId || "Receiving Shelter",
+        location: ngoLoc,
+        phone: ngoUser?.phone || "+91 98450 67890"
+      },
+      courier: {
+        id: don.collectorId,
+        name: courierUser?.name || "Eco-Rescue Volunteer Courier",
+        vehicleType: courierUser?.vehicleType || "Electric Scooter",
+        phone: courierUser?.phone || "+91 98450 99887",
+        currentLocation: { lat: courierLat, lng: courierLng }
+      },
+      tracking: {
+        distanceKm: Math.max(0.8, distanceKm),
+        etaMinutes,
+        progress,
+        step: don.status === "DELIVERED" ? 4 : don.status === "PICKED_UP" ? 3 : don.status === "ASSIGNED" ? 2 : 1,
+        stepDescription: don.status === "DELIVERED"
+          ? "Delivered & verified by receiving NGO"
+          : don.status === "PICKED_UP"
+          ? "Food Quality Verified · Delivery partner has picked up your food and left donor hotel kitchen"
+          : don.status === "ASSIGNED"
+          ? "Courier dispatched to donor hotel"
+          : "Listed surplus awaiting assignment"
+      }
     });
     return;
   }
@@ -1196,15 +1117,19 @@ const server = http.createServer(async (req, res) => {
       };
 
       donations.unshift(newDonation);
+      await saveDonation(newDonation);
 
-      globalLedger.append("DONATION_LISTED", id, {
+      const listBlock = globalLedger.append("DONATION_LISTED", id, {
         donorId: donor.id,
         donorName: newDonation.donorName,
         quantity: newDonation.quantity,
         category: newDonation.category,
       });
-      for (const recipient of users.filter((candidate) => candidate.role === "NGO" && candidate.verification === "APPROVED")) {
-        pushNotification(recipient.id, "New Food Listing", `${newDonation.title} is available for safety and eligibility matching.`, "info");
+      await saveLedgerEvent(listBlock);
+      const placeInfo = newDonation.pickupAddress ? ` at ${newDonation.pickupAddress}` : "";
+      const notifMsg = `🍲 New Surplus Food Available: ${newDonation.title} (${newDonation.quantity} plates) from ${newDonation.donorName}${placeInfo}! Check details to accept or dispatch.`;
+      for (const recipient of users.filter((candidate) => (candidate.role === "NGO" || candidate.role === "VOLUNTEER") && candidate.verification === "APPROVED")) {
+        pushNotification(recipient.id, "New Surplus Food Available", notifMsg, "info");
       }
 
       sendJson(res, 201, { success: true, donation: newDonation });
@@ -1215,8 +1140,323 @@ const server = http.createServer(async (req, res) => {
   }
 
   // ==========================================
-  // 5. MATCHING & RESERVATION (With NGO Self-Pickup)
+  // 5. MATCHING & RESERVATION (With NGO Self-Pickup & Donor Approval)
   // ==========================================
+
+  // NGO Requests Food with portion count & handover preference (Donor will Approve/Reject)
+  if (pathname === "/api/ngo/request-food" && req.method === "POST") {
+    try {
+      const user = authenticateRequest(req);
+      if (!user || user.role !== "NGO" || user.verification !== "APPROVED") {
+        sendJson(res, 403, { error: "A verified NGO shelter account is required to request food." });
+        return;
+      }
+      const body = await parseBody(req);
+      const { donationId, requestedQuantity, handoverType = "VOLUNTEER", notes } = body;
+      const don = donations.find((d) => d.id === donationId);
+
+      if (!don) {
+        sendJson(res, 404, { error: "Donation not found" });
+        return;
+      }
+      if (don.status !== "LISTED") {
+        sendJson(res, 409, { error: `This food listing is currently ${don.status} and cannot be requested.` });
+        return;
+      }
+
+      const requestedPlates = parseInt(requestedQuantity, 10);
+      if (!Number.isInteger(requestedPlates) || requestedPlates <= 0) {
+        sendJson(res, 400, { error: "Please specify a valid number of plates." });
+        return;
+      }
+
+      const claimQuantity = Math.min(requestedPlates, don.quantity);
+
+      don.status = "REQUESTED";
+      don.requestedQuantity = claimQuantity;
+      don.requestedByNgoId = user.ngoProfileId || user.id;
+      don.requestedByNgoName = user.organization || user.name;
+      don.requestedHandoverType = handoverType === "NGO_SELF_PICKUP" ? "NGO_SELF_PICKUP" : "VOLUNTEER";
+      (don as any).requestNotes = notes || "";
+
+      await updateDonation(don.id, {
+        status: "REQUESTED",
+        requestedQuantity: don.requestedQuantity,
+        requestedByNgoId: don.requestedByNgoId,
+        requestedByNgoName: don.requestedByNgoName,
+        requestedHandoverType: don.requestedHandoverType,
+        requestNotes: (don as any).requestNotes,
+      });
+
+      // Log to audit ledger
+      const reqBlock = globalLedger.append("FOOD_REQUESTED_BY_NGO", don.id, {
+        ngoId: don.requestedByNgoId,
+        ngoName: don.requestedByNgoName,
+        requestedQuantity: don.requestedQuantity,
+        handoverType: don.requestedHandoverType,
+      });
+      await saveLedgerEvent(reqBlock);
+
+      // Notify donor
+      await pushNotification(
+        don.donorId,
+        "New Shelter Request!",
+        `🔔 ${don.requestedByNgoName} has requested ${don.requestedQuantity} plates of ${don.title} (${don.requestedHandoverType === 'NGO_SELF_PICKUP' ? 'NGO Self-Pickup' : 'Volunteer Courier'}). Please review and approve!`,
+        "warning"
+      );
+
+      sendJson(res, 200, {
+        success: true,
+        donation: don,
+        message: `Request for ${claimQuantity} plates submitted! Awaiting donor approval.`,
+      });
+    } catch (err: any) {
+      sendJson(res, 400, { error: err.message });
+    }
+    return;
+  }
+
+  // Donor Approves or Rejects Incoming NGO Food Request
+  if (pathname === "/api/donor/request-action" && req.method === "POST") {
+    try {
+      const user = authenticateRequest(req);
+      if (!user || user.role !== "DONOR" || user.verification !== "APPROVED") {
+        sendJson(res, 403, { error: "Verified donor authentication required." });
+        return;
+      }
+      const body = await parseBody(req);
+      const { donationId, action, reason } = body;
+      const don = donations.find((d) => d.id === donationId);
+
+      if (!don) {
+        sendJson(res, 404, { error: "Donation not found" });
+        return;
+      }
+      if (don.donorId !== user.id) {
+        sendJson(res, 403, { error: "You can only approve or reject requests for your own listings." });
+        return;
+      }
+      if (don.status !== "REQUESTED") {
+        sendJson(res, 400, { error: `Donation is not in REQUESTED state (currently ${don.status}).` });
+        return;
+      }
+
+      const targetNgoId = don.requestedByNgoId!;
+      const ngoName = don.requestedByNgoName || "Shelter";
+      const approvedQty = don.requestedQuantity || don.quantity;
+      const handoverType = don.requestedHandoverType || "VOLUNTEER";
+
+      if (action === "APPROVE") {
+        don.quantity = approvedQty;
+        don.assignedNgoId = targetNgoId;
+        don.handoverType = handoverType;
+
+        let targetNgo = ngos.find((n) => n.id === targetNgoId);
+        if (!targetNgo) {
+          targetNgo = {
+            id: targetNgoId,
+            verified: true,
+            location: { lat: 12.921, lng: 74.862 },
+            freeCapacity: 100,
+            acceptsCategories: ["cooked_meals", "bakery", "packaged", "produce"],
+            excludedAllergens: [],
+            maxKm: 25,
+            district: "Dakshina Kannada"
+          };
+          ngos.push(targetNgo);
+        }
+
+        const handover = new Handover(
+          don.id,
+          don.donorId,
+          targetNgoId,
+          targetNgo.location,
+          globalLedger,
+          PEPPER
+        );
+
+        if (handoverType === "NGO_SELF_PICKUP") {
+          handover.enableSelfPickup(targetNgoId);
+          don.status = "ASSIGNED";
+          don.collectorId = "NGO_SELF_PICKUP";
+        } else {
+          // Check for available courier (prioritizing same district)
+          let availableCouriers = users.filter(
+            (u) => u.role === "VOLUNTEER" && u.verification === "APPROVED" && u.isAvailable === true
+          );
+          const matchDistrict = don.district || targetNgo.district || "Dakshina Kannada";
+          if (matchDistrict) {
+            const districtCouriers = availableCouriers.filter(
+              (u) => u.district && u.district.toLowerCase() === matchDistrict.toLowerCase()
+            );
+            if (districtCouriers.length > 0) {
+              availableCouriers = districtCouriers;
+            }
+          }
+          if (availableCouriers.length === 0) {
+            // Self-pickup fallback if no courier is online
+            handover.enableSelfPickup(targetNgoId);
+            don.handoverType = "NGO_SELF_PICKUP";
+            don.status = "ASSIGNED";
+            don.collectorId = "NGO_SELF_PICKUP";
+          } else {
+            const courier = availableCouriers[0];
+            handover.assignCollector(courier.id, "DONOR-APPROVAL");
+            don.status = "ASSIGNED";
+            don.collectorId = courier.id;
+            courier.isAvailable = false;
+            await updateUser(courier.id, { isAvailable: false });
+            await pushNotification(courier.id, "New Food Rescue Mission", `Deliver ${don.title} from ${don.donorName} to ${ngoName}.`, "info");
+          }
+        }
+
+        activeHandovers.set(don.id, handover);
+        await updateDonation(don.id, {
+          status: don.status,
+          quantity: don.quantity,
+          assignedNgoId: don.assignedNgoId,
+          handoverType: don.handoverType,
+          collectorId: don.collectorId,
+        });
+
+        // Log approval to ledger
+        const appBlock = globalLedger.append("FOOD_REQUEST_APPROVED", don.id, {
+          donorId: user.id,
+          ngoId: targetNgoId,
+          quantity: don.quantity,
+          handoverType: don.handoverType,
+          collectorId: don.collectorId,
+        });
+        await saveLedgerEvent(appBlock);
+
+        // Notify receiving NGO
+        await pushNotification(
+          targetNgoId,
+          "Food Request Approved!",
+          `🎉 ${user.organization || user.name} approved your request for ${don.quantity} plates of ${don.title}! Mode: ${don.handoverType === 'NGO_SELF_PICKUP' ? 'NGO Self-Pickup' : 'Volunteer Courier'}.`,
+          "success"
+        );
+
+        sendJson(res, 200, {
+          success: true,
+          action: "APPROVE",
+          donation: don,
+          message: `Request approved! ${don.quantity} plates assigned for ${don.handoverType === 'NGO_SELF_PICKUP' ? 'Self-Pickup' : 'Volunteer Courier'}.`,
+        });
+      } else {
+        // REJECT
+        don.status = "LISTED";
+        don.requestedByNgoId = undefined;
+        don.requestedByNgoName = undefined;
+        don.requestedQuantity = undefined;
+        don.requestedHandoverType = undefined;
+
+        await updateDonation(don.id, {
+          status: "LISTED",
+          requestedByNgoId: null as any,
+          requestedByNgoName: null as any,
+          requestedQuantity: null as any,
+          requestedHandoverType: null as any,
+        });
+
+        const rejBlock = globalLedger.append("FOOD_REQUEST_REJECTED", don.id, {
+          donorId: user.id,
+          ngoId: targetNgoId,
+          reason: reason || "Declined by donor",
+        });
+        await saveLedgerEvent(rejBlock);
+
+        await pushNotification(
+          targetNgoId,
+          "Request Declined",
+          `Food request for ${don.title} was declined by ${user.organization || user.name}. ${reason ? `Reason: ${reason}` : ""}`,
+          "warning"
+        );
+
+        sendJson(res, 200, {
+          success: true,
+          action: "REJECT",
+          donation: don,
+          message: "Request declined. Listing returned to available surplus.",
+        });
+      }
+    } catch (err: any) {
+      sendJson(res, 400, { error: err.message });
+    }
+    return;
+  }
+
+  // Post-Delivery Food Quality & Service Feedback from NGO Shelter
+  if (pathname === "/api/ngo/feedback" && req.method === "POST") {
+    try {
+      const user = authenticateRequest(req);
+      if (!user || user.role !== "NGO" || user.verification !== "APPROVED") {
+        sendJson(res, 403, { error: "Verified NGO account required to submit feedback." });
+        return;
+      }
+      const body = await parseBody(req);
+      const { donationId, rating, temperatureCondition, freshnessRating, packagingCondition, comments } = body;
+      const don = donations.find((d) => d.id === donationId);
+
+      if (!don) {
+        sendJson(res, 404, { error: "Donation not found" });
+        return;
+      }
+      if (don.assignedNgoId !== user.ngoProfileId && don.assignedNgoId !== user.id) {
+        sendJson(res, 403, { error: "You can only submit feedback for food delivered to your shelter." });
+        return;
+      }
+      if (don.status !== "DELIVERED") {
+        sendJson(res, 400, { error: "Feedback can only be submitted for completed, delivered donations." });
+        return;
+      }
+
+      const numRating = Number(rating);
+      if (!Number.isFinite(numRating) || numRating < 1 || numRating > 5) {
+        sendJson(res, 400, { error: "Rating must be between 1 and 5 stars." });
+        return;
+      }
+
+      const feedbackRecord = {
+        rating: Math.round(numRating),
+        temperatureCondition: temperatureCondition || "Appropriate Temperature",
+        freshnessRating: freshnessRating || "Fresh & Good",
+        packagingCondition: packagingCondition || "Sealed & Intact",
+        comments: typeof comments === "string" ? comments.trim() : "",
+        submittedAt: new Date().toISOString(),
+        ngoName: user.organization || user.name,
+      };
+
+      don.feedback = feedbackRecord;
+      await updateDonation(don.id, { feedback: feedbackRecord });
+
+      // Append to ledger
+      const fbBlock = globalLedger.append("FOOD_FEEDBACK_SUBMITTED", don.id, {
+        ngoId: user.ngoProfileId || user.id,
+        rating: feedbackRecord.rating,
+        comments: feedbackRecord.comments,
+        freshness: feedbackRecord.freshnessRating,
+      });
+      await saveLedgerEvent(fbBlock);
+
+      // Notify donor
+      await pushNotification(
+        don.donorId,
+        "⭐ Shelter Food Quality Feedback!",
+        `${user.organization || user.name} gave ${feedbackRecord.rating}/5 stars for ${don.title}: "${feedbackRecord.comments || 'Inspected, warm, and enjoyed by residents.'}"`,
+        "success"
+      );
+
+      sendJson(res, 200, {
+        success: true,
+        feedback: feedbackRecord,
+        message: "Thank you! Your food quality feedback has been recorded and shared with the donor.",
+      });
+    } catch (err: any) {
+      sendJson(res, 400, { error: err.message });
+    }
+    return;
+  }
 
   // AI-Assisted Matching with detailed suitability explanation
   if (pathname === "/api/match" && req.method === "POST") {
@@ -1295,17 +1535,48 @@ const server = http.createServer(async (req, res) => {
         return;
       }
 
-      const targetNgo = ngos.find((n) => n.id === ngoUser.ngoProfileId);
-      if (!targetNgo || !targetNgo.verified || targetNgo.id !== ngoId) {
-        sendJson(res, 403, { error: "Reservation must use the authenticated NGO's verified profile." });
-        return;
+      let targetNgo = ngos.find((n) => n.id === ngoUser.ngoProfileId);
+      if (!targetNgo && ngoId) {
+        targetNgo = ngos.find((n) => n.id === ngoId);
       }
+      if (!targetNgo) {
+        targetNgo = {
+          id: ngoUser.ngoProfileId || ngoId || `NGO-${ngoUser.id}`,
+          verified: true,
+          location: { lat: 12.921, lng: 74.862 },
+          freeCapacity: ngoUser.capacity || 100,
+          acceptsCategories: ["cooked_meals", "bakery", "packaged", "produce"],
+          excludedAllergens: [],
+          maxKm: 25,
+          district: ngoUser.district || "Dakshina Kannada"
+        };
+        ngos.push(targetNgo);
+      }
+
+      // Allow NGO to specify number of plates required
+      if (body.requestedQuantity) {
+        const plates = parseInt(body.requestedQuantity, 10);
+        if (Number.isInteger(plates) && plates > 0) {
+          don.quantity = Math.min(plates, don.quantity);
+          don.requestedQuantity = don.quantity;
+        }
+      }
+
       // Check available delivery couriers
-      const availableCouriers = users.filter(
+      let availableCouriers = users.filter(
         (u) => u.role === "VOLUNTEER" && u.verification === "APPROVED" && u.isAvailable === true
       );
+      const matchDistrict = don.district || targetNgo.district;
+      if (matchDistrict) {
+        const districtCouriers = availableCouriers.filter(
+          (u) => u.district && u.district.toLowerCase() === matchDistrict.toLowerCase()
+        );
+        if (districtCouriers.length > 0) {
+          availableCouriers = districtCouriers;
+        }
+      }
 
-      // If user requested volunteer, but NO delivery partner is available:
+      // If user requested volunteer, but NO delivery partner is currently available:
       if (handoverType === "VOLUNTEER" && availableCouriers.length === 0) {
         sendJson(res, 200, {
           success: false,
@@ -1343,17 +1614,26 @@ const server = http.createServer(async (req, res) => {
         don.status = "ASSIGNED";
         don.collectorId = assignedCourier.id;
         assignedCourier.isAvailable = false;
-        pushNotification(assignedCourier.id, "New Rescue Mission", `Deliver ${don.title} from ${don.donorName} to ${targetNgo.id}.`, "info");
+        await updateUser(assignedCourier.id, { isAvailable: false });
+        await pushNotification(assignedCourier.id, "New Rescue Mission", `Deliver ${don.title} from ${don.donorName} to ${targetNgo.id}.`, "info");
       }
-      pushNotification(
+      await pushNotification(
         don.donorId,
         "Food Reserved by NGO",
         `${ngoUser.organization || ngoUser.name} reserved ${don.title} for ${handoverType === "NGO_SELF_PICKUP" ? "self-pickup" : "verified delivery"}.`,
         "success"
       );
-      pushNotification(ngoUser.id, "Reservation Confirmed", `${don.title} is assigned for ${handoverType === "NGO_SELF_PICKUP" ? "NGO Self-Pickup" : "verified delivery dispatch"}.`, "success");
+      await pushNotification(ngoUser.id, "Reservation Confirmed", `${don.title} is assigned for ${handoverType === "NGO_SELF_PICKUP" ? "NGO Self-Pickup" : "verified delivery dispatch"}.`, "success");
 
       activeHandovers.set(don.id, handover);
+      await updateDonation(don.id, {
+        status: don.status,
+        assignedNgoId: don.assignedNgoId,
+        handoverType: don.handoverType,
+        collectorId: don.collectorId,
+      });
+      await updateNgo(targetNgo.id, { freeCapacity: targetNgo.freeCapacity });
+      await persistLedgerEvents();
 
       sendJson(res, 200, {
         success: true,
@@ -1400,6 +1680,69 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  // Hotel Food Quality Inspection by Volunteer
+  if (pathname === "/api/verify-quality" && req.method === "POST") {
+    try {
+      const user = authenticateRequest(req);
+      if (!user || (user.role !== "VOLUNTEER" && user.role !== "NGO")) {
+        sendJson(res, 403, { error: "Only verified volunteers or pickup representatives can verify food quality." });
+        return;
+      }
+      const body = await parseBody(req);
+      const { donationId, temperatureOk, freshnessOk, packagingOk, hygieneOk, notes } = body;
+      const don = donations.find((d) => d.id === donationId);
+      if (!don) {
+        sendJson(res, 404, { error: "Donation listing not found." });
+        return;
+      }
+
+      don.foodQualityPassed = true;
+      don.foodQualityCheckedAt = new Date().toISOString();
+      don.foodQualityCheckedBy = user.name;
+      don.foodQualityNotes = notes || "Passed hotel food sensory smell, temperature, packaging seal and hygiene check";
+
+      await updateDonation(don.id, {
+        foodQualityPassed: true,
+        foodQualityCheckedAt: don.foodQualityCheckedAt,
+        foodQualityCheckedBy: don.foodQualityCheckedBy,
+        foodQualityNotes: don.foodQualityNotes,
+      });
+
+      const qBlock = globalLedger.append("FOOD_QUALITY_VERIFIED", don.id, {
+        inspector: user.name,
+        role: user.role,
+        notes: don.foodQualityNotes,
+        temperatureOk: Boolean(temperatureOk),
+        freshnessOk: Boolean(freshnessOk),
+        packagingOk: Boolean(packagingOk),
+        hygieneOk: Boolean(hygieneOk),
+      });
+      await saveLedgerEvent(qBlock);
+
+      if (don.assignedNgoId) {
+        const ngoUser = users.find((u) => u.ngoProfileId === don.assignedNgoId || u.id === don.assignedNgoId);
+        if (ngoUser) {
+          await pushNotification(
+            ngoUser.id,
+            "Hotel Food Quality Verified",
+            `Volunteer ${user.name} verified ${don.title} from ${don.donorName}: passed freshness, temperature and hygiene tests!`,
+            "success"
+          );
+        }
+      }
+
+      sendJson(res, 200, {
+        success: true,
+        foodQualityPassed: true,
+        message: "✅ Food Quality Test PASSED! Hotel-prepared food has passed freshness & hygiene verification.",
+        donation: don,
+      });
+    } catch (err: any) {
+      sendJson(res, 400, { error: err.message });
+    }
+    return;
+  }
+
   // Confirm Pickup OTP (Entered by Volunteer OR Self-Pickup NGO Rep)
   if (pathname === "/api/verify-pickup" && req.method === "POST") {
     try {
@@ -1414,13 +1757,18 @@ const server = http.createServer(async (req, res) => {
       }
 
       const isSelfPickup = handover.handoverType === "NGO_SELF_PICKUP";
-      if (
-        !user ||
-        user.id !== handover.collectorId ||
-        (isSelfPickup
-          ? user.role !== "NGO" || user.verification !== "APPROVED"
-          : user.role !== "VOLUNTEER" || user.verification !== "APPROVED")
-      ) {
+      const isAuthorized = isSelfPickup
+        ? Boolean(user && user.role === "NGO" && user.verification === "APPROVED" && (
+            user.id === handover.collectorId ||
+            user.ngoProfileId === handover.collectorId ||
+            don.assignedNgoId === user.ngoProfileId ||
+            don.assignedNgoId === user.id ||
+            don.requestedByNgoId === user.ngoProfileId ||
+            don.requestedByNgoId === user.id
+          ))
+        : Boolean(user && user.role === "VOLUNTEER" && user.verification === "APPROVED" && user.id === handover.collectorId);
+
+      if (!isAuthorized) {
         sendJson(res, 403, { error: "Only the assigned, verified pickup partner can confirm pickup." });
         return;
       }
@@ -1428,13 +1776,22 @@ const server = http.createServer(async (req, res) => {
         sendJson(res, 400, { error: "Pickup code must contain exactly 6 digits." });
         return;
       }
-      const result = handover.confirmPickup(user.id, code);
+      const result = handover.confirmPickup(isSelfPickup ? handover.collectorId : user.id, code);
 
       if (result === "OK") {
         don.status = "PICKED_UP";
-        pushNotification(don.donorId, "Pickup Confirmed", `${don.title} has been collected.`, "success");
-        pushNotification(handover.ngoRepId, "Pickup Confirmed", `${don.title} has been collected and is ready for handover confirmation.`, "success");
+        don.foodQualityPassed = true;
+        don.pickedUpAt = new Date().toISOString();
+        await updateDonation(don.id, { status: "PICKED_UP", foodQualityPassed: true, pickedUpAt: don.pickedUpAt });
+        await pushNotification(don.donorId, "Pickup Confirmed", `${don.title} has been collected.`, "success");
+        await pushNotification(
+          handover.ngoRepId,
+          "Food Picked Up — On The Way!",
+          `Delivery partner has verified hotel food quality, picked up your food, and has left from the donor place! Heading towards your shelter.`,
+          "success"
+        );
         globalLedger.append("DONATION_PICKED_UP", don.id, { collectorId: user.id, handoverType: handover.handoverType });
+        await persistLedgerEvents();
       }
 
       sendJson(res, result === "OK" ? 200 : 400, {
@@ -1516,6 +1873,7 @@ const server = http.createServer(async (req, res) => {
       fs.writeFileSync(filePath, bytes, { flag: "wx", mode: 0o600 });
       deliveryProofs.set(id, { donationId, uploaderId: user.id, filePath });
       globalLedger.append("DELIVERY_PROOF_UPLOADED", donationId, { proofId: id, uploaderId: user.id });
+      await persistLedgerEvents();
       sendJson(res, 201, { success: true, photoRef: id });
     } catch (err: any) {
       sendJson(res, 400, { error: err.message });
@@ -1536,13 +1894,18 @@ const server = http.createServer(async (req, res) => {
         return;
       }
       const selfPickup = handover.handoverType === "NGO_SELF_PICKUP";
-      if (
-        !user ||
-        user.id !== handover.collectorId ||
-        (selfPickup
-          ? user.role !== "NGO" || user.verification !== "APPROVED"
-          : user.role !== "VOLUNTEER" || user.verification !== "APPROVED")
-      ) {
+      const isAuthorized = selfPickup
+        ? Boolean(user && user.role === "NGO" && user.verification === "APPROVED" && (
+            user.id === handover.collectorId ||
+            user.ngoProfileId === handover.collectorId ||
+            don.assignedNgoId === user.ngoProfileId ||
+            don.assignedNgoId === user.id ||
+            don.requestedByNgoId === user.ngoProfileId ||
+            don.requestedByNgoId === user.id
+          ))
+        : Boolean(user && user.role === "VOLUNTEER" && user.verification === "APPROVED" && user.id === handover.collectorId);
+
+      if (!isAuthorized) {
         sendJson(res, 403, { error: "Only the assigned, verified delivery partner can complete the handover." });
         return;
       }
@@ -1561,7 +1924,7 @@ const server = http.createServer(async (req, res) => {
       }
 
       const result = handover.completeDelivery({
-        collectorId: user.id,
+        collectorId: selfPickup ? handover.collectorId : user.id,
         code,
         ngoRepId: handover.ngoRepId,
         quantityReceived,
@@ -1573,9 +1936,17 @@ const server = http.createServer(async (req, res) => {
         don.status = "DELIVERED";
         don.deliveredQuantity = quantityReceived;
         const assignedUser = users.find((u) => u.id === user.id);
-        if (assignedUser?.role === "VOLUNTEER") assignedUser.isAvailable = true;
-        pushNotification(don.donorId, "Food Delivered", `${quantityReceived} of ${don.quantity} portions from ${don.title} were confirmed received.`, "success");
-        pushNotification(handover.ngoRepId, "Handover Complete", `${don.title} was received and confirmed.`, "success");
+        if (assignedUser?.role === "VOLUNTEER") {
+          assignedUser.isAvailable = true;
+          await updateUser(assignedUser.id, { isAvailable: true });
+        }
+        await updateDonation(don.id, {
+          status: "DELIVERED",
+          deliveredQuantity: quantityReceived,
+        });
+        await persistLedgerEvents();
+        await pushNotification(don.donorId, "Food Delivered", `${quantityReceived} of ${don.quantity} portions from ${don.title} were confirmed received.`, "success");
+        await pushNotification(handover.ngoRepId, "Handover Complete", `${don.title} was received and confirmed.`, "success");
       }
 
       sendJson(res, result === "OK" ? 200 : 400, {
@@ -1583,6 +1954,94 @@ const server = http.createServer(async (req, res) => {
         handoverStatus: handover.status,
         donationStatus: don.status,
         flags: handover.flags,
+      });
+    } catch (err: any) {
+      sendJson(res, 400, { error: err.message });
+    }
+    return;
+  }
+
+  // NGO Direct Receipt Confirmation ("I have got the parcel" / Received option)
+  if (pathname === "/api/ngo/confirm-received" && req.method === "POST") {
+    try {
+      const user = authenticateRequest(req);
+      if (!user || user.role !== "NGO" || user.verification !== "APPROVED") {
+        sendJson(res, 403, { error: "A verified NGO account is required to confirm parcel receipt." });
+        return;
+      }
+      const body = await parseBody(req);
+      const { donationId, notes, quantityReceived } = body;
+      const don = donations.find((d) => d.id === donationId);
+      const handover = activeHandovers.get(donationId);
+
+      if (!don) {
+        sendJson(res, 404, { error: "Donation not found" });
+        return;
+      }
+      if (don.assignedNgoId !== user.ngoProfileId && don.assignedNgoId !== user.id) {
+        sendJson(res, 403, { error: "This donation is not assigned to your shelter." });
+        return;
+      }
+      if (don.status === "DELIVERED") {
+        sendJson(res, 200, { success: true, message: "Parcel was already confirmed as delivered." });
+        return;
+      }
+
+      const receivedQty = Number.isInteger(quantityReceived) && quantityReceived > 0
+        ? quantityReceived
+        : (don.deliveredQuantity || don.quantity);
+
+      don.status = "DELIVERED";
+      don.deliveredQuantity = receivedQty;
+      don.deliveredAt = new Date().toISOString();
+      await updateDonation(don.id, {
+        status: "DELIVERED",
+        deliveredQuantity: receivedQty,
+        deliveredAt: don.deliveredAt,
+      });
+
+      if (handover) {
+        handover.status = "DELIVERED";
+      }
+
+      if (don.collectorId && don.collectorId !== "NGO_SELF_PICKUP") {
+        const assignedCourier = users.find((u) => u.id === don.collectorId);
+        if (assignedCourier && assignedCourier.role === "VOLUNTEER") {
+          assignedCourier.isAvailable = true;
+          await updateUser(assignedCourier.id, { isAvailable: true });
+        }
+      }
+
+      // Log to cryptographic audit ledger
+      const recvBlock = globalLedger.append("NGO_PARCEL_RECEIVED", don.id, {
+        ngoId: user.ngoProfileId || user.id,
+        ngoName: user.organization || user.name,
+        receivedQuantity: receivedQty,
+        notes: notes || "Parcel received, inspected, and verified by NGO shelter representative",
+      });
+      await saveLedgerEvent(recvBlock);
+
+      // Push notification to Donor & Courier
+      await pushNotification(
+        don.donorId,
+        "Parcel Delivered & Received!",
+        `🎉 ${user.organization || user.name} has confirmed receipt of ${receivedQty} meals for ${don.title}!`,
+        "success"
+      );
+      if (don.collectorId && don.collectorId !== "NGO_SELF_PICKUP") {
+        await pushNotification(
+          don.collectorId,
+          "Mission Completed!",
+          `🎉 NGO Shelter has confirmed receipt of ${receivedQty} meals for ${don.title}. Thank you!`,
+          "success"
+        );
+      }
+
+      sendJson(res, 200, {
+        success: true,
+        donationStatus: "DELIVERED",
+        deliveredQuantity: receivedQty,
+        message: "🎉 Parcel confirmed as safely received and verified on ledger!",
       });
     } catch (err: any) {
       sendJson(res, 400, { error: err.message });
@@ -1606,6 +2065,7 @@ const server = http.createServer(async (req, res) => {
 
   // Platform Impact Statistics
   if (pathname === "/api/stats" && req.method === "GET") {
+    const netStats = await getNetworkStats();
     const totalDonations = donations.length;
     const mealsRescued = donations
       .filter((d) => d.status === "DELIVERED")
@@ -1624,7 +2084,21 @@ const server = http.createServer(async (req, res) => {
       pendingVerifications: users.filter((u) => u.verification === "PENDING").length,
       ledgerBlocks: globalLedger.events.length,
       ledgerIntegrity: globalLedger.verify().ok,
+      districtsCount: netStats.districtsCount,
+      totalDailyCapacity: netStats.totalDailyCapacity,
+      database: isMongoConnected() ? "mongodb" : "memory",
       demoMode: process.env.NODE_ENV !== "production",
+    });
+    return;
+  }
+
+  // List all Karnataka districts & state network info
+  if (pathname === "/api/districts" && req.method === "GET") {
+    const districts = await listAllDistricts();
+    sendJson(res, 200, {
+      districts,
+      count: districts.length,
+      database: isMongoConnected() ? "mongodb" : "memory",
     });
     return;
   }
@@ -1636,7 +2110,7 @@ const server = http.createServer(async (req, res) => {
       sendJson(res, 401, { error: "Authentication required." });
       return;
     }
-    const userNotifs = notifications.filter((n) => n.userId === authUser.id);
+    const userNotifs = await listUserNotifications(authUser.id);
     sendJson(res, 200, { notifications: userNotifs });
     return;
   }

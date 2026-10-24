@@ -1,98 +1,934 @@
 /* ==========================================================================
-   FoodBridge AI — Dedicated NGO Portal Stylesheet
-   Theme: Royal Violet & Neon Orchid
+   FoodBridge AI — NGO Shelter Portal Modern Theme (Reference Design)
+   Crisp, clean emerald/forest palette matching reference dashboard.
    ========================================================================== */
 
+:root {
+  --ngo-primary: #10b981;
+  --ngo-dark: #0f5132;
+  --ngo-forest: #1b4332;
+  --ngo-bg: #f8fafc;
+  --ngo-card-bg: #ffffff;
+  --ngo-border: #e2e8f0;
+  --ngo-text: #0f172a;
+  --ngo-text-muted: #64748b;
+  --ngo-mint: #ecfdf5;
+  --ngo-amber: #f59e0b;
+}
+
+[data-theme="dark"] .theme-ngo-portal {
+  --ngo-bg: #090d16;
+  --ngo-card-bg: #111827;
+  --ngo-border: #1f2937;
+  --ngo-text: #f9fafb;
+  --ngo-text-muted: #9ca3af;
+  --ngo-mint: rgba(16, 185, 129, 0.12);
+}
+
 .theme-ngo-portal {
-  background-color: #080612;
-  color: #f8fafc;
+  background-color: var(--ngo-bg);
+  color: var(--ngo-text);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  min-height: 100vh;
 }
 
-.text-violet {
-  color: #a78bfa;
+.portal-wrapper {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 0 1.25rem 2rem;
 }
 
-.glow-ngo-1 {
-  width: 550px;
-  height: 550px;
-  background: #8b5cf6;
-  top: -120px;
-  left: -100px;
+/* Navbar active pill matching screenshot */
+.nav-link.ngo-active-pill {
+  background: #0f5132 !important;
+  color: #ffffff !important;
+  border-radius: 999px !important;
+  padding: 0.45rem 1.15rem !important;
+  font-weight: 700 !important;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 2px 8px rgba(15, 81, 50, 0.25);
 }
 
-.glow-ngo-2 {
-  width: 450px;
-  height: 450px;
-  background: #3b82f6;
-  bottom: 0;
-  right: -100px;
+.nav-link.ngo-active-pill .nav-link-icon {
+  font-size: 0.95rem;
+}
+
+/* NGO User Chip on Navbar matching screenshot */
+.ngo-user-badge-chip {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 4px 12px 4px 6px;
+  border-radius: 12px;
+  background: #ecfdf5;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+[data-theme="dark"] .ngo-user-badge-chip {
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.25);
 }
 
 .ngo-badge-icon {
-  background: rgba(139, 92, 246, 0.15) !important;
-  border-color: rgba(139, 92, 246, 0.35) !important;
-  box-shadow: 0 0 15px rgba(139, 92, 246, 0.25) !important;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: #0f5132;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
 }
 
-.ngo-user-chip {
-  border-color: rgba(139, 92, 246, 0.25) !important;
+.ngo-badge-meta {
+  display: flex;
+  flex-direction: column;
 }
 
-/* Stats Banner */
-.ngo-stats-banner {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
+.ngo-badge-name {
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: #0f5132;
+  line-height: 1.15;
+}
+
+[data-theme="dark"] .ngo-badge-name {
+  color: #34d399;
+}
+
+.ngo-badge-meta .user-role-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #059669;
+  letter-spacing: 0.02em;
+}
+
+.ngo-signout-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  border-radius: 8px;
+  padding: 6px 12px;
+  border: 1px solid var(--ngo-border);
+  color: var(--ngo-text-muted);
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ngo-signout-btn:hover {
+  background: #fee2e2;
+  border-color: #fca5a5;
+  color: #b91c1c;
+}
+
+/* Map live badge and GPS recenter button */
+.map-gps-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #ecfdf5;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  color: #059669;
+  font-size: 0.74rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.map-gps-btn:hover {
+  background: #d1fae5;
+  border-color: #10b981;
+}
+
+/* Custom Callout Map Pins matching reference image */
+.custom-callout-pin {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 10px;
+  padding: 5px 10px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.14);
+  white-space: nowrap;
+  pointer-events: auto;
+}
+
+[data-theme="dark"] .custom-callout-pin {
+  background: #1e293b;
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+.pin-icon-wrap {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.pin-icon-donor {
+  background: #0f5132;
+  color: #ffffff;
+}
+
+.pin-icon-ngo {
+  background: #ea580c;
+  color: #ffffff;
+}
+
+.pin-text-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.pin-text-title {
+  font-size: 0.76rem;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.15;
+}
+
+[data-theme="dark"] .pin-text-title {
+  color: #f8fafc;
+}
+
+.pin-text-sub {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: #64748b;
+}
+
+[data-theme="dark"] .pin-text-sub {
+  color: #94a3b8;
+}
+
+.courier-marker-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  pointer-events: auto;
+}
+
+.courier-scooter-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #10b981;
+  border: 2px solid #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.courier-parcel-pill {
+  background: #ffedd5;
+  color: #9a3412;
+  border: 1px solid #fed7aa;
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Hero Header */
+.ngo-hero-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  padding: 1.25rem 0 1rem;
+  flex-wrap: wrap;
   gap: 1rem;
 }
 
-@media (max-width: 900px) {
-  .ngo-stats-banner {
-    grid-template-columns: repeat(2, 1fr);
-  }
+.ngo-dashboard-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.76rem;
+  font-weight: 800;
+  color: #10b981;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.4rem;
+  text-transform: uppercase;
 }
 
-.ngo-workspace {
+.ngo-dashboard-badge .badge-dot {
+  font-size: 0.65rem;
+  color: #10b981;
+}
+
+.ngo-hero-title {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: var(--ngo-forest);
+  margin: 0 0 0.4rem;
+  letter-spacing: -0.02em;
+}
+
+[data-theme="dark"] .ngo-hero-title {
+  color: #f9fafb;
+}
+
+.ngo-hero-sub {
+  font-size: 0.98rem;
+  color: var(--ngo-text-muted);
+  margin: 0;
+  max-width: 680px;
+}
+
+.ngo-network-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #0d9488;
+  text-decoration: none;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.ngo-network-link:hover {
+  color: #0f766e;
+  transform: translateX(3px);
+}
+
+/* 3 Metrics Cards Row */
+.ngo-metrics-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1.5rem;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;
+  margin-bottom: 1.75rem;
 }
 
+.ngo-metric-card {
+  background: var(--ngo-card-bg);
+  border: 1px solid var(--ngo-border);
+  border-radius: 16px;
+  padding: 1.1rem 1.4rem;
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.ngo-metric-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+}
+
+.metric-icon-wrap {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  flex-shrink: 0;
+}
+
+.icon-meals {
+  background: #0f5132;
+  color: #ffffff;
+}
+
+.icon-co2 {
+  background: #ecfdf5;
+  color: #10b981;
+}
+
+.icon-pickups {
+  background: #ecfdf5;
+  color: #059669;
+}
+
+.metric-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.metric-number {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--ngo-text);
+  line-height: 1.1;
+}
+
+.metric-label {
+  font-size: 0.85rem;
+  color: var(--ngo-text-muted);
+  font-weight: 600;
+  margin-top: 0.2rem;
+}
+
+/* Main Dashboard 2-Column Grid */
+.ngo-dashboard-grid {
+  display: grid;
+  grid-template-columns: 1.35fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.ngo-panel-card {
+  background: var(--ngo-card-bg);
+  border: 1px solid var(--ngo-border);
+  border-radius: 18px;
+  padding: 1.4rem;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  margin-bottom: 1.25rem;
+}
+
+.panel-icon-circle {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.icon-donations {
+  background: #0f5132;
+  color: #ffffff;
+}
+
+.icon-tracking {
+  background: #10b981;
+  color: #ffffff;
+}
+
+.panel-title-text h3 {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--ngo-text);
+  margin: 0 0 0.2rem;
+}
+
+.panel-title-text p {
+  font-size: 0.85rem;
+  color: var(--ngo-text-muted);
+  margin: 0;
+}
+
+/* Filter Row */
+.ngo-filter-bar {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.search-input-wrap {
+  flex: 1;
+  min-width: 200px;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-input-wrap .search-icon {
+  position: absolute;
+  left: 12px;
+  font-size: 0.9rem;
+  color: var(--ngo-text-muted);
+  pointer-events: none;
+}
+
+.filter-search-input {
+  width: 100%;
+  padding: 0.6rem 0.8rem 0.6rem 2.2rem;
+  border: 1px solid var(--ngo-border);
+  border-radius: 10px;
+  background: var(--ngo-card-bg);
+  color: var(--ngo-text);
+  font-size: 0.86rem;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.filter-search-input:focus {
+  border-color: #10b981;
+}
+
+.filter-dropdowns {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.filter-select {
+  padding: 0.6rem 1rem;
+  border: 1px solid var(--ngo-border);
+  border-radius: 10px;
+  background: var(--ngo-card-bg);
+  color: var(--ngo-text);
+  font-size: 0.84rem;
+  font-weight: 600;
+  font-family: inherit;
+  outline: none;
+  cursor: pointer;
+}
+
+/* Food Donation Cards */
+.ngo-food-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.ngo-donation-card {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--ngo-border);
+  border-radius: 14px;
+  background: var(--ngo-card-bg);
+  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+}
+
+.ngo-donation-card:hover {
+  border-color: rgba(16, 185, 129, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+}
+
+.food-card-thumb {
+  width: 90px;
+  height: 80px;
+  border-radius: 12px;
+  object-fit: cover;
+  flex-shrink: 0;
+  background: #f1f5f9;
+  border: 1px solid var(--ngo-border);
+}
+
+.food-card-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.food-card-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.food-hotel-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--ngo-text);
+}
+
+.verified-donor-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #059669;
+  background: #ecfdf5;
+  border: 1px solid rgba(5, 150, 105, 0.25);
+  border-radius: 999px;
+  padding: 1px 7px;
+}
+
+.food-item-sub {
+  font-size: 0.85rem;
+  color: var(--ngo-text-muted);
+  margin-top: 0.15rem;
+  font-weight: 600;
+}
+
+.food-tag-pill {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.tag-hot {
+  background: #fff7ed;
+  color: #c2410c;
+  border: 1px solid rgba(194, 65, 12, 0.25);
+}
+
+.tag-expiring {
+  background: #fefce8;
+  color: #a16207;
+  border: 1px solid rgba(161, 98, 7, 0.25);
+}
+
+.tag-fresh {
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid rgba(4, 120, 87, 0.25);
+}
+
+.food-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.8rem;
+  color: var(--ngo-text-muted);
+  font-weight: 600;
+  margin: 0.5rem 0;
+  flex-wrap: wrap;
+}
+
+.food-meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.food-card-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 0.35rem;
+}
+
+.btn-details {
+  padding: 0.45rem 1rem;
+  border: 1px solid #d97706;
+  border-radius: 8px;
+  background: transparent;
+  color: #d97706;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-details:hover {
+  background: #fffbe8;
+}
+
+.btn-reserve {
+  padding: 0.45rem 1.15rem;
+  border: none;
+  border-radius: 8px;
+  background: #0f5132;
+  color: #ffffff;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(15, 81, 50, 0.25);
+  transition: all 0.2s ease;
+}
+
+.btn-reserve:hover {
+  background: #0b3d26;
+  transform: translateY(-1px);
+}
+
+/* Right Column: Map Card & Stepper */
+.ngo-map-card {
+  border: 1px solid var(--ngo-border);
+  border-radius: 16px;
+  overflow: hidden;
+  margin-bottom: 1.25rem;
+  background: var(--ngo-card-bg);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+}
+
+.map-card-top-bar {
+  padding: 0.6rem 0.9rem;
+  display: flex;
+  justify-content: flex-end;
+  background: var(--ngo-card-bg);
+  border-bottom: 1px solid var(--ngo-border);
+}
+
+.live-loc-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #10b981;
+  background: #ecfdf5;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+
+.pulse-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 6px #10b981;
+}
+
+.ngo-map-canvas {
+  height: 250px;
+  width: 100%;
+}
+
+/* 4-Stage Stepper Below Map */
+.ngo-stepper-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  background: var(--ngo-card-bg);
+  border-top: 1px solid var(--ngo-border);
+}
+
+.step-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--ngo-text-muted);
+}
+
+.step-node.active {
+  color: #0f5132;
+}
+
+[data-theme="dark"] .step-node.active {
+  color: #34d399;
+}
+
+.step-dot {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 800;
+  background: #f1f5f9;
+  color: var(--ngo-text-muted);
+  border: 1.5px solid var(--ngo-border);
+}
+
+.step-node.active .step-dot {
+  background: #10b981;
+  color: #ffffff;
+  border-color: #059669;
+}
+
+.step-line {
+  flex: 1;
+  height: 3px;
+  background: var(--ngo-border);
+  margin: 0 8px;
+  margin-bottom: 16px;
+}
+
+.step-line.active {
+  background: #10b981;
+}
+
+/* Inbound Action Box */
+.inbound-actions-box {
+  background: #f8fafc;
+  border: 1px solid var(--ngo-border);
+  border-radius: 12px;
+  padding: 0.9rem;
+  margin-bottom: 1.25rem;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+}
+
+[data-theme="dark"] .inbound-actions-box {
+  background: #1f2937;
+}
+
+/* Food Safety Checklist Card */
+.food-safety-card {
+  background: var(--ngo-card-bg);
+  border: 1px solid var(--ngo-border);
+  border-radius: 16px;
+  padding: 1.1rem;
+}
+
+.safety-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.85rem;
+}
+
+.safety-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.safety-icon {
+  font-size: 1.35rem;
+  color: #10b981;
+}
+
+.safety-title-group h4 {
+  font-size: 0.96rem;
+  font-weight: 800;
+  color: var(--ngo-text);
+  margin: 0;
+}
+
+.safety-title-group p {
+  font-size: 0.78rem;
+  color: var(--ngo-text-muted);
+  margin: 0;
+}
+
+.verified-shelter-badge {
+  font-size: 0.74rem;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: #0f5132;
+  color: #ffffff;
+}
+
+.safety-checklist {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.safety-check-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--ngo-text);
+}
+
+.safety-check-item .check-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #ecfdf5;
+  color: #059669;
+  border: 1px solid #10b981;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+/* Bottom Trust Bar */
+.ngo-trust-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 1.25rem 1rem;
+  border-top: 1px solid var(--ngo-border);
+  margin-top: 1.5rem;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.trust-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #0f5132;
+}
+
+[data-theme="dark"] .trust-item {
+  color: #34d399;
+}
+
+.trust-divider {
+  width: 1px;
+  height: 20px;
+  background: var(--ngo-border);
+}
+
+/* Responsive Media Queries */
 @media (max-width: 1024px) {
-  .ngo-workspace {
+  .ngo-dashboard-grid {
     grid-template-columns: 1fr;
   }
 }
 
-.btn-claim {
-  background: linear-gradient(135deg, #8b5cf6, #6d28d9);
-  color: #fff;
-  font-weight: 700;
-  padding: 0.55rem 1rem;
-  border-radius: 8px;
-  border: none;
-  cursor: pointer;
-  box-shadow: 0 4px 15px rgba(139, 92, 246, 0.35);
-  transition: all 0.2s ease;
-}
-
-.btn-claim:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(139, 92, 246, 0.5);
-}
-
-.btn-issue-delivery-otp {
-  background: linear-gradient(135deg, #06b6d4, #0284c7);
-  color: #fff;
-  font-weight: 700;
-  padding: 0.55rem 1rem;
-  border-radius: 8px;
-  border: none;
-  cursor: pointer;
-  box-shadow: 0 4px 15px rgba(6, 182, 212, 0.35);
-  transition: all 0.2s ease;
-}
-
-.btn-issue-delivery-otp:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(6, 182, 212, 0.5);
+@media (max-width: 768px) {
+  .ngo-hero-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .ngo-hero-title {
+    font-size: 1.75rem;
+  }
+  .ngo-metrics-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  .ngo-filter-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .filter-dropdowns {
+    width: 100%;
+  }
+  .filter-select {
+    flex: 1;
+  }
+  .ngo-donation-card {
+    flex-direction: column;
+  }
+  .food-card-thumb {
+    width: 100%;
+    height: 120px;
+  }
+  .trust-divider {
+    display: none;
+  }
+  .ngo-trust-bar {
+    justify-content: center;
+    gap: 1.25rem;
+  }
 }

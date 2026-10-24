@@ -227,3 +227,287 @@
     width: 100%;
   }
 }
+
+/* ==========================================================================
+   Volunteer Dispatch Updates & Visual Photo Showcase Styles
+   ========================================================================== */
+
+.volunteer-dispatch-banner {
+  position: relative;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-card);
+  margin-bottom: 1.1rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.volunteer-dispatch-img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.dispatch-banner-overlay {
+  padding: 0.9rem 1.1rem;
+  background: var(--bg-card);
+}
+
+.dispatch-badge-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.5rem;
+}
+
+.dispatch-live-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.75rem;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #10b981;
+}
+
+.dispatch-pulse-dot {
+  width: 8px;
+  height: 8px;
+  background: #10b981;
+  border-radius: 50%;
+  box-shadow: 0 0 8px #10b981;
+}
+
+.dispatch-tag-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.75rem;
+  background: rgba(6, 182, 212, 0.12);
+  border: 1px solid rgba(6, 182, 212, 0.3);
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #06b6d4;
+}
+
+.dispatch-banner-text {
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+/* Dispatch Section Titles */
+.dispatch-surplus-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 1.1rem 0 0.75rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.dispatch-surplus-header h4 {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--forest-900);
+  margin: 0;
+}
+
+.badge-count {
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  background: rgba(6, 182, 212, 0.15);
+  color: #06b6d4;
+  border: 1px solid rgba(6, 182, 212, 0.3);
+  text-transform: uppercase;
+}
+
+/* Dispatch Surplus Cards */
+.dispatch-surplus-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+  padding: 0.95rem;
+  margin-bottom: 0.75rem;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.dispatch-surplus-card:hover {
+  border-color: rgba(6, 182, 212, 0.4);
+  transform: translateY(-2px);
+}
+
+.dispatch-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-bottom: 0.4rem;
+}
+
+.dispatch-card-title {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--text-dark);
+}
+
+.dispatch-donor-info {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin-top: 0.2rem;
+}
+
+.dispatch-pill-row {
+  display: flex;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+  align-items: center;
+  margin: 0.6rem 0;
+}
+
+/* All Clear Card */
+.dispatch-all-clear-card {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  padding: 1.1rem;
+  background: rgba(16, 185, 129, 0.06);
+  border: 1px dashed rgba(16, 185, 129, 0.3);
+  border-radius: 14px;
+  margin-bottom: 1rem;
+}
+
+.all-clear-icon {
+  font-size: 2rem;
+}
+
+.all-clear-body h4 {
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: var(--forest-900);
+  margin: 0 0 0.25rem;
+}
+
+.all-clear-body p {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* Volunteer Guidelines Box */
+.volunteer-guidelines-box {
+  background: rgba(15, 23, 42, 0.03);
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+  padding: 1rem;
+  margin-top: 1.25rem;
+}
+
+.guidelines-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.guidelines-header h4 {
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: var(--forest-900);
+  margin: 0;
+}
+
+.guidelines-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.6rem;
+}
+
+.guideline-item {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-start;
+  padding: 0.6rem;
+  border-radius: 10px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  font-size: 0.8rem;
+}
+
+.gl-icon {
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.gl-text strong {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--text-dark);
+  margin-bottom: 0.15rem;
+}
+
+.gl-text span {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  line-height: 1.3;
+}
+
+/* Recent Rescues Feed */
+.recent-rescues-feed {
+  margin-top: 1.25rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.recent-rescues-header {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--forest-900);
+  margin-bottom: 0.6rem;
+}
+
+.rescue-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: 0.8rem;
+}
+
+.rescue-item:last-child {
+  border-bottom: none;
+}
+
+.rescue-check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #10b981;
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.rescue-info strong {
+  display: block;
+  font-size: 0.82rem;
+  color: var(--text-dark);
+}
+
+.rescue-meta {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+}

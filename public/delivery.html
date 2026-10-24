@@ -3,12 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Delivery Dispatch & Courier Hub — FoodBridge AI</title>
+  <title>Volunteers Dispatch &amp; Rescue Hub — FoodBridge AI</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="delivery.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script src="header.js"></script>
 </head>
 <body class="theme-delivery-portal">
@@ -23,7 +25,7 @@
           <div class="brand-badge-icon delivery-badge-icon">🚴</div>
           <div>
             <div class="portal-brand-title">FoodBridge <span class="text-cyan">AI</span></div>
-            <div class="portal-brand-sub">Volunteer Rider Dispatch Network</div>
+            <div class="portal-brand-sub">Volunteers Rescue Network</div>
           </div>
         </a>
       </div>
@@ -36,7 +38,7 @@
           <span class="user-avatar" id="riderAvatar">🚴</span>
           <div class="user-details">
             <span class="user-name" id="riderName">Rahul Kumar</span>
-            <span class="user-role-badge text-cyan">Verified Delivery Partner</span>
+            <span class="user-role-badge text-cyan">Verified Volunteer</span>
           </div>
         </div>
 
@@ -92,7 +94,7 @@
           <div class="card-icon-badge">🛵</div>
           <div>
             <h3>Dispatch Updates</h3>
-            <p class="card-caption">Verified available partners are assigned automatically when an NGO reserves food</p>
+            <p class="card-caption">Live community food rescue radar &amp; nearby hotel dispatch updates</p>
           </div>
         </div>
 

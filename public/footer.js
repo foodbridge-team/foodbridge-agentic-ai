@@ -26,7 +26,7 @@
           <a href="index.html" class="footer-crisp-link">Home</a>
           <a href="donor-login.html" class="footer-crisp-link">Donor</a>
           <a href="ngo-login.html" class="footer-crisp-link">NGO Shelter</a>
-          <a href="delivery-login.html" class="footer-crisp-link">Delivery</a>
+          <a href="delivery-login.html" class="footer-crisp-link">Volunteers</a>
           <a href="admin-login.html" class="footer-crisp-link">Admin</a>
         </nav>
 
